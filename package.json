@@ -1,0 +1,14 @@
+{
+  "name": "buyer-portal",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "yarn --cwd backend dev",
+    "dev:frontend": "yarn --cwd frontend dev",
+    "dev:all": "concurrently \"yarn dev:backend\" \"yarn dev:frontend\"",
+    "install:all": "yarn --cwd backend install && yarn --cwd frontend install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
