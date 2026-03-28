@@ -5,7 +5,12 @@
 3. Open phpMyAdmin (localhost/phpmyadmin) → create database 'buyer_portal' → run the SQL from db_setup.sql
 
 4. Create backend/.env with:
- PORT=3001, DB_HOST=localhost, DB_USER=root, DB_PASSWORD=, DB_NAME=buyer_portal, JWT_SECRET=anysecretkey
+ PORT=3001
+ DB_HOST=localhost
+ DB_USER=root
+ DB_PASSWORD=
+ DB_NAME=buyer_portal
+ JWT_SECRET=anysecretkey
 
 5. Create frontend/.env with: VITE_API_URL=http://localhost:3001/api
 
