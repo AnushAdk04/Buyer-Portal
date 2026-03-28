@@ -15,4 +15,5 @@
 5. Create frontend/.env with: VITE_API_URL=http://localhost:3001/api
 
 6. Run: yarn install:all
-7. Run: yarn dev:all
+7. Run: yarn install
+8. Run: yarn dev:all
