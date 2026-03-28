@@ -1,6 +1,6 @@
 1. Install Node.js (v18+) and Yarn (npm install -g yarn)
 
-2. Install and open XAMPP — start MySQL
+2. Install and open XAMPP — start Apache and MySQL
 
 3. Open phpMyAdmin (localhost/phpmyadmin) → create database 'buyer_portal' → run the SQL from db_setup.sql
 
