@@ -2,6 +2,8 @@ const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -10,7 +12,7 @@ const pool = mysql.createPool({
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  ssl: { rejectUnauthorized: false }
+  ...(isProduction && { ssl: { rejectUnauthorized: false } }),
 });
 
 pool.getConnection()
