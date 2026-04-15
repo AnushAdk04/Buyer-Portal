@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { FiHome } from 'react-icons/fi';
 
 const RegisterPage = () => {
   const { login } = useAuth();
@@ -39,8 +40,8 @@ const RegisterPage = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-xl font-bold">B</span>
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200/70">
+            <FiHome className="text-white text-xl" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Create your account</h1>
           <p className="text-gray-500 text-sm mt-1">Join the buyer portal today</p>

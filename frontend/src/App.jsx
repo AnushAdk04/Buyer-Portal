@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+import PropertyDetailsPage from './pages/PropertyDetailsPage';
 
 function App() {
   return (
@@ -18,6 +19,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/properties/:propertyId"
+            element={
+              <ProtectedRoute>
+                <PropertyDetailsPage />
               </ProtectedRoute>
             }
           />

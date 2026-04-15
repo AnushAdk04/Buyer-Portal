@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
@@ -7,6 +8,7 @@ import toast from 'react-hot-toast';
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [loadingProps, setLoadingProps] = useState(true);
@@ -52,20 +54,30 @@ const DashboardPage = () => {
 
   const favouriteCount = properties.filter(p => p.isFavourite).length;
 
+  const openPropertyDetails = (property) => {
+    navigate(`/dashboard/properties/${property.id}`, { state: { property } });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#f1f5f9_100%)]">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        {/* Welcome banner */}
-        <div className="bg-blue-600 rounded-2xl px-8 py-6 mb-8 text-white flex items-center justify-between">
+        <div className="bg-slate-900 rounded-3xl px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between shadow-xl shadow-slate-200/60 border border-slate-800">
           <div>
-            <h2 className="text-xl font-bold mb-1">Welcome back, {user?.name} 👋</h2>
-            <p className="text-blue-100 text-sm capitalize">Role: {user?.role}</p>
+            <p className="text-blue-300 text-sm uppercase tracking-[0.24em] font-semibold mb-2">Property dashboard</p>
+            <h2 className="text-2xl md:text-3xl font-semibold mb-2">Welcome back, {user?.name}</h2>
+            <p className="text-slate-300 text-sm max-w-2xl">Browse listings, open a property for a full detail view, and manage favourites from one place.</p>
           </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold">{favouriteCount}</p>
-            <p className="text-blue-100 text-sm">Saved properties</p>
+          <div className="grid grid-cols-2 gap-3 sm:min-w-[260px]">
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-2xl font-semibold">{properties.length}</p>
+              <p className="text-slate-300 text-sm">Available</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
+              <p className="text-2xl font-semibold">{favouriteCount}</p>
+              <p className="text-slate-300 text-sm">Saved</p>
+            </div>
           </div>
         </div>
 
@@ -106,6 +118,7 @@ const DashboardPage = () => {
               <PropertyCard
                 key={property.id}
                 property={property}
+                onOpen={openPropertyDetails}
                 onToggleFavourite={handleToggleFavourite}
                 loading={toggleLoading}
               />
