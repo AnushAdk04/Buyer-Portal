@@ -3,6 +3,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
+import EditPropertyModal from '../components/EditPropertyModal';
+import ConfirmDialog from '../components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   FaArrowLeft,
@@ -13,6 +15,7 @@ import {
   FaRegStar,
   FaHome,
 } from 'react-icons/fa';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const PropertyDetailsPage = () => {
   const { user } = useAuth();
@@ -23,6 +26,14 @@ const PropertyDetailsPage = () => {
   const [property, setProperty] = useState(location.state?.property || null);
   const [loading, setLoading] = useState(!location.state?.property);
   const [saving, setSaving] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', location: '', price: '', description: '' });
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = Number(property?.uploaded_by) === Number(user?.id);
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
@@ -76,6 +87,77 @@ const PropertyDetailsPage = () => {
       toast.error(err.response?.data?.message || 'Could not update favourite', { id: toastId });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleEditFormChange = (e) => {
+    setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleOpenEdit = () => {
+    if (!property) return;
+
+    setEditImageFile(null);
+    setEditForm({
+      title: property.title || '',
+      location: property.location || '',
+      price: property.price ?? '',
+      description: property.description || '',
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    if (!property) return;
+
+    if (!editForm.title || !editForm.location || !editForm.price) {
+      toast.error('Title, location and price are required');
+      return;
+    }
+
+    setEditing(true);
+    const toastId = toast.loading('Updating property...');
+
+    try {
+      const payload = new FormData();
+      payload.append('title', editForm.title.trim());
+      payload.append('location', editForm.location.trim());
+      payload.append('price', String(Number(editForm.price)));
+      payload.append('description', editForm.description.trim());
+      if (editImageFile) {
+        payload.append('image', editImageFile);
+      }
+
+      const { data } = await axiosClient.put(`/properties/${property.id}`, payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      setProperty((prev) => (prev ? { ...prev, ...data.property, isFavourite: prev.isFavourite } : prev));
+      setIsEditOpen(false);
+      setEditImageFile(null);
+      toast.success('Property updated successfully', { id: toastId });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not update property', { id: toastId });
+    } finally {
+      setEditing(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!property) return;
+
+    setDeleting(true);
+    const toastId = toast.loading('Deleting property...');
+
+    try {
+      await axiosClient.delete(`/properties/${property.id}`);
+      toast.success('Property deleted successfully', { id: toastId });
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not delete property', { id: toastId });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -146,6 +228,27 @@ const PropertyDetailsPage = () => {
                 </button>
               </div>
 
+              {isOwner && (
+                <div className="flex flex-wrap gap-2 mb-6">
+                  <button
+                    type="button"
+                    onClick={handleOpenEdit}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    <FiEdit2 className="text-base" />
+                    Edit Property
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    <FiTrash2 className="text-base" />
+                    Delete Property
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4">
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2"><FaMapMarkerAlt className="text-blue-500" /> Location</p>
@@ -180,6 +283,35 @@ const PropertyDetailsPage = () => {
             </aside>
           </div>
         ) : null}
+
+        <EditPropertyModal
+          isOpen={isEditOpen}
+          onClose={() => {
+            if (!editing) {
+              setIsEditOpen(false);
+              setEditImageFile(null);
+            }
+          }}
+          form={editForm}
+          onFormChange={handleEditFormChange}
+          onImageChange={setEditImageFile}
+          onSubmit={handleSaveEdit}
+          saving={editing}
+          imageFile={editImageFile}
+        />
+
+        <ConfirmDialog
+          isOpen={isDeleteOpen}
+          title="Delete Property"
+          message="Are you sure you want to delete this property? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            if (!deleting) setIsDeleteOpen(false);
+          }}
+          loading={deleting}
+        />
       </main>
     </div>
   );

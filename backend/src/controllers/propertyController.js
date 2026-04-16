@@ -1,4 +1,4 @@
-const { createProperty, getPropertiesByUser, getPropertyById, deleteProperty, updateProperty } = require('../models/propertyModel');
+const { createProperty, getPropertiesByUser, getPropertyById, deleteProperty, updateProperty, updatePropertyWithImage } = require('../models/propertyModel');
 const { cloudinary } = require('../config/cloudinary');
 
 const uploadProperty = async (req, res) => {
@@ -86,6 +86,9 @@ const editProperty = async (req, res) => {
     if (!title || !location || !price)
       return res.status(400).json({ message: 'Title, location and price are required' });
 
+    if (isNaN(price) || Number(price) <= 0)
+      return res.status(400).json({ message: 'Price must be a valid positive number' });
+
     const property = await getPropertyById(req.params.id);
     if (!property)
       return res.status(404).json({ message: 'Property not found' });
@@ -93,7 +96,30 @@ const editProperty = async (req, res) => {
     if (property.uploaded_by !== req.user.id)
       return res.status(403).json({ message: 'You can only edit your own properties' });
 
-    await updateProperty(req.params.id, req.user.id, { title, location, price, description });
+    if (req.file) {
+      // new image uploaded — delete old one from cloudinary first
+      if (property.image_public_id) {
+        await cloudinary.uploader.destroy(property.image_public_id);
+      }
+
+      await updatePropertyWithImage(req.params.id, req.user.id, {
+        title,
+        location,
+        price: Number(price),
+        description: description || null,
+        imageUrl: req.file.path,
+        imagePublicId: req.file.filename,
+      });
+    } else {
+      // no new image — just update the text fields
+      await updateProperty(req.params.id, req.user.id, {
+        title,
+        location,
+        price: Number(price),
+        description: description || null,
+      });
+    }
+
     const updated = await getPropertyById(req.params.id);
     res.json({ message: 'Property updated successfully', property: updated });
   } catch (err) {

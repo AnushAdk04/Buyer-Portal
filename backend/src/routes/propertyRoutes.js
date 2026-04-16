@@ -15,7 +15,7 @@ router.use(protect);
 router.post('/', upload.single('image'), uploadProperty);
 router.get('/my', getMyProperties);
 router.get('/:id', getSingleProperty);
-router.put('/:id', editProperty);
+router.put('/:id', upload.single('image'), editProperty);
 router.delete('/:id', removeProperty);
 
 module.exports = router;

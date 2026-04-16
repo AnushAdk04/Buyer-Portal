@@ -49,4 +49,14 @@ const updateProperty = async (id, userId, { title, location, price, description 
   return result.affectedRows;
 };
 
-module.exports = { createProperty, getPropertiesByUser, getPropertyById, deleteProperty, updateProperty };
+const updatePropertyWithImage = async (id, userId, { title, location, price, description, imageUrl, imagePublicId }) => {
+  const [result] = await db.query(
+    `UPDATE properties
+     SET title = ?, location = ?, price = ?, description = ?, image_url = ?, image_public_id = ?
+     WHERE id = ? AND uploaded_by = ?`,
+    [title, location, price, description, imageUrl, imagePublicId, id, userId]
+  );
+  return result.affectedRows;
+};
+
+module.exports = { createProperty, getPropertiesByUser, getPropertyById, deleteProperty, updateProperty, updatePropertyWithImage };

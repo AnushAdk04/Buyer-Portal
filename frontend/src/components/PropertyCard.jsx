@@ -1,6 +1,17 @@
 import { FaHeart, FaMapMarkerAlt, FaArrowRight, FaRupeeSign } from 'react-icons/fa';
+import { FiTrash2, FiEdit2 } from 'react-icons/fi';
 
-const PropertyCard = ({ property, onOpen, onToggleFavourite, loading }) => {
+const PropertyCard = ({
+  property,
+  onOpen,
+  onToggleFavourite,
+  loading,
+  canDelete,
+  canEdit,
+  onEdit,
+  onDelete,
+  deleting,
+}) => {
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
 
@@ -43,6 +54,39 @@ const PropertyCard = ({ property, onOpen, onToggleFavourite, loading }) => {
             <FaHeart className={property.isFavourite ? 'text-red-500 text-lg' : 'text-slate-300 text-lg'} />
           )}
         </button>
+
+        {canDelete && (
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {canEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit?.(property);
+                }}
+                className="h-10 px-3 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-lg shadow-slate-900/10 dark:shadow-black/40 flex items-center gap-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-200/40 transition-colors"
+              >
+                <FiEdit2 className="text-sm" />
+                <span className="text-xs font-semibold">Edit</span>
+              </button>
+            )}
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(property.id);
+              }}
+              disabled={deleting === property.id}
+              className="h-10 px-3 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-lg shadow-slate-900/10 dark:shadow-black/40 flex items-center gap-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-200/40 transition-colors disabled:opacity-50"
+            >
+              {deleting === property.id ? (
+                <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FiTrash2 className="text-sm" />
+              )}
+              <span className="text-xs font-semibold">Delete</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="p-5 space-y-3">
