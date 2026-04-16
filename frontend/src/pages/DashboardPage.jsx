@@ -76,7 +76,7 @@ const DashboardPage = () => {
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
               <p className="text-2xl font-semibold">{favouriteCount}</p>
-              <p className="text-slate-300 text-sm">Saved</p>
+              <p className="text-slate-300 text-sm">Favourites</p>
             </div>
           </div>
         </div>
