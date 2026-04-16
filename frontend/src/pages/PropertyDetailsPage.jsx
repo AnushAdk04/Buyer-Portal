@@ -80,13 +80,13 @@ const PropertyDetailsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_30%),linear-gradient(180deg,_#f8fafc_0%,_#eef2ff_100%)]">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <button
           onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors mb-6"
         >
           <FaArrowLeft />
           Back to properties
@@ -126,16 +126,16 @@ const PropertyDetailsPage = () => {
               </div>
             </section>
 
-            <aside className="bg-white/85 backdrop-blur-xl rounded-[2rem] border border-white shadow-xl shadow-slate-200/60 p-6 sm:p-8 lg:sticky lg:top-6">
+            <aside className="bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl rounded-[2rem] border border-white dark:border-slate-800 shadow-xl shadow-slate-200/60 dark:shadow-slate-950/70 p-6 sm:p-8 lg:sticky lg:top-6">
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
                   <p className="text-xs uppercase tracking-[0.26em] text-blue-600 font-semibold mb-3">Property details</p>
-                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-950 leading-tight">{property.title}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-950 dark:text-slate-100 leading-tight">{property.title}</h1>
                 </div>
                 <button
                   onClick={handleToggleFavourite}
                   disabled={saving}
-                  className="shrink-0 w-12 h-12 rounded-full bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center disabled:opacity-50"
+                  className="shrink-0 w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center disabled:opacity-50"
                   aria-label={property.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
                 >
                   {saving ? (
@@ -147,31 +147,31 @@ const PropertyDetailsPage = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                  <p className="text-sm text-slate-500 mb-2 flex items-center gap-2"><FaMapMarkerAlt className="text-blue-500" /> Location</p>
-                  <p className="text-slate-900 font-medium">{property.location || 'Not specified'}</p>
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2"><FaMapMarkerAlt className="text-blue-500" /> Location</p>
+                  <p className="text-slate-900 dark:text-slate-100 font-medium">{property.location || 'Not specified'}</p>
                 </div>
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                  <p className="text-sm text-slate-500 mb-2 flex items-center gap-2"><FaRupeeSign className="text-blue-500" /> Asking price</p>
-                  <p className="text-slate-900 font-semibold text-lg">{formatPrice(property.price)}</p>
+                <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2"><FaRupeeSign className="text-blue-500" /> Asking price</p>
+                  <p className="text-slate-900 dark:text-slate-100 font-semibold text-lg">{formatPrice(property.price)}</p>
                 </div>
               </div>
 
-              <div className="space-y-4 text-slate-600">
+              <div className="space-y-4 text-slate-600 dark:text-slate-300">
                 <p className="leading-7">
-                  A modern listing detail view with a clean split layout. The image is kept prominent on the left while the right side surfaces the essentials in easy-to-scan cards.
+                  {property.description || 'No description provided for this property.'}
                 </p>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                  <div className="flex items-center gap-3 text-slate-700">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-4 space-y-3">
+                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
                     <FaRegCheckCircle className="text-emerald-500" />
                     Quick property overview
                   </div>
-                  <div className="flex items-center gap-3 text-slate-700">
+                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
                     <FaRegCheckCircle className="text-emerald-500" />
                     Tap the heart to save or remove from favourites
                   </div>
-                  <div className="flex items-center gap-3 text-slate-700">
+                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
                     <FaRegCheckCircle className="text-emerald-500" />
                     Works directly from the dashboard without extra navigation setup
                   </div>

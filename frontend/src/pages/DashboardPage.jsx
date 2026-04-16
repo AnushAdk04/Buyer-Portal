@@ -59,11 +59,11 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_34%),linear-gradient(180deg,_#f8fafc_0%,_#f1f5f9_100%)]">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-slate-900 rounded-3xl px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between shadow-xl shadow-slate-200/60 border border-slate-800">
+        <div className="bg-slate-900 rounded-3xl px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between shadow-xl shadow-slate-200/60 dark:shadow-none border border-slate-800">
           <div>
             <p className="text-blue-300 text-sm uppercase tracking-[0.24em] font-semibold mb-2">Property dashboard</p>
             <h2 className="text-2xl md:text-3xl font-semibold mb-2">Welcome back, {user?.name}</h2>
@@ -86,14 +86,14 @@ const DashboardPage = () => {
           <button
             onClick={() => setActiveTab('all')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             All Properties ({properties.length})
           </button>
           <button
             onClick={() => setActiveTab('favourites')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'favourites' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+              ${activeTab === 'favourites' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             My Favourites ({favouriteCount})
           </button>
@@ -105,7 +105,7 @@ const DashboardPage = () => {
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : displayed.length === 0 ? (
-          <div className="text-center py-24 text-gray-400">
+          <div className="text-center py-24 text-gray-400 dark:text-slate-500">
             <p className="text-5xl mb-4">♥</p>
             <p className="text-lg font-medium">No properties here yet</p>
             <p className="text-sm mt-1">
