@@ -1,39 +1,42 @@
-import axios from 'axios';
+const jwt = require('jsonwebtoken');
 
-const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
+const protect = (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  const accessTokenHeader = req.headers['x-access-token'];
 
-axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    if (!config.headers) {
-      config.headers = {};
-    }
+  let token = null;
 
-    if (typeof config.headers.set === 'function') {
-      config.headers.set('Authorization', `Bearer ${token}`);
-    } else {
-      config.headers.Authorization = `Bearer ${token}`;
+  if (typeof authHeader === 'string') {
+    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
+    if (bearerMatch?.[1]) {
+      token = bearerMatch[1].trim();
     }
   }
-  return config;
-});
 
-axiosClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    const status = error.response?.status;
-    const requestUrl = error.config?.url || '';
-    const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
-
-    if (status === 401 && !isAuthRequest) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+  if (!token && typeof accessTokenHeader === 'string') {
+    token = accessTokenHeader.trim();
   }
-);
 
-export default axiosClient;
+  // Fallbacks for environments where Authorization header can be stripped.
+  if (!token && req.body?.token) {
+    token = String(req.body.token).trim();
+  }
+
+  if (!token && req.query?.token) {
+    token = String(req.query.token).trim();
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
+module.exports = { protect };
