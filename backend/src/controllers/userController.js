@@ -14,6 +14,23 @@ const getProfile = async (req, res) => {
   }
 };
 
+const getPublicProfile = async (req, res) => {
+  try {
+    const sellerId = Number(req.params.id);
+    if (!Number.isInteger(sellerId) || sellerId <= 0)
+      return res.status(400).json({ message: 'Invalid seller id' });
+
+    const user = await findById(sellerId);
+    if (!user)
+      return res.status(404).json({ message: 'Seller not found' });
+
+    res.json({ user });
+  } catch (err) {
+    console.error('Get public profile error:', err);
+    res.status(500).json({ message: 'Could not fetch seller profile' });
+  }
+};
+
 const editProfile = async (req, res) => {
   try {
     const { name, phone, bio } = req.body;
@@ -108,4 +125,4 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, editProfile, changeAvatar, removeAvatar, changePassword };
+module.exports = { getProfile, getPublicProfile, editProfile, changeAvatar, removeAvatar, changePassword };

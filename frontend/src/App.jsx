@@ -7,6 +7,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import ProfilePage from './pages/ProfilePage';
+import SellerProfilePage from './pages/SellerProfilePage';
 
 function App() {
   return (
@@ -38,6 +39,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/sellers/:sellerId"
+              element={
+                <ProtectedRoute>
+                  <SellerProfilePage />
                 </ProtectedRoute>
               }
             />

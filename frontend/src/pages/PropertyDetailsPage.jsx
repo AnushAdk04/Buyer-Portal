@@ -15,7 +15,7 @@ import {
   FaRegStar,
   FaHome,
 } from 'react-icons/fa';
-import { FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiEdit2, FiExternalLink, FiTrash2 } from 'react-icons/fi';
 
 const PropertyDetailsPage = () => {
   const { user } = useAuth();
@@ -235,9 +235,21 @@ const PropertyDetailsPage = () => {
 
               {property.uploaded_by_name && (
                 <div className="mb-6 rounded-2xl bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-slate-700 dark:text-slate-300 text-sm">
-                    <span className="font-medium">Property added by:</span> {property.uploaded_by_name.split(' ')[0]}
-                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-slate-700 dark:text-slate-300 text-sm">
+                      <span className="font-medium">Property added by:</span> {property.uploaded_by_name.split(' ')[0]}
+                    </p>
+                    {!!property.uploaded_by && (
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/dashboard/sellers/${property.uploaded_by}`)}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-[#141414] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      >
+                        <FiExternalLink className="text-sm" />
+                        View Seller Profile
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
