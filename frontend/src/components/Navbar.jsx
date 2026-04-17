@@ -76,9 +76,17 @@ const Navbar = () => {
               aria-haspopup="menu"
               aria-expanded={isMenuOpen}
             >
-              <span className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white">
-                <FiUser className="text-base" />
-              </span>
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt="Profile avatar"
+                  className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                />
+              ) : (
+                <span className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white">
+                  <FiUser className="text-base" />
+                </span>
+              )}
               <span className="hidden sm:flex flex-col items-start leading-tight min-w-0">
                 <span className="text-sm font-semibold truncate max-w-[140px]">{user?.name || 'Guest User'}</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400 capitalize inline-flex items-center gap-1">
@@ -103,13 +111,21 @@ const Navbar = () => {
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
-                    navigate('/dashboard');
+                    navigate('/dashboard/profile');
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
-                    <FiUser />
-                  </span>
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt="Profile avatar"
+                      className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                    />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
+                      <FiUser />
+                    </span>
+                  )}
                   <span>View profile</span>
                 </button>
 

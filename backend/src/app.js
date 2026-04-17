@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -35,6 +36,27 @@ app.use('/api/users', userRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+// Centralized error handler for upload and request validation errors.
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File is too large. Max allowed size is 2MB for profile picture and 5MB for property image.' });
+    }
+    return res.status(400).json({ message: err.message || 'Upload failed due to invalid file.' });
+  }
+
+  if (err && err.message === 'Only image files are allowed') {
+    return res.status(400).json({ message: err.message });
+  }
+
+  if (err) {
+    console.error('Unhandled API error:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+
+  next();
 });
 
 module.exports = app;
