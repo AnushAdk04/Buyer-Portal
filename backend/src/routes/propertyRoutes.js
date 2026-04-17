@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { upload } = require('../config/cloudinary');
+const { uploadProperty } = require('../config/cloudinary');
 const {
-  uploadProperty,
+  uploadProperty: uploadPropertyHandler,
   getMyProperties,
   getSingleProperty,
   removeProperty,
@@ -12,10 +12,10 @@ const {
 
 router.use(protect);
 
-router.post('/', upload.single('image'), uploadProperty);
+router.post('/', uploadProperty.single('image'), uploadPropertyHandler);
 router.get('/my', getMyProperties);
 router.get('/:id', getSingleProperty);
-router.put('/:id', upload.single('image'), editProperty);
+router.put('/:id', uploadProperty.single('image'), editProperty);
 router.delete('/:id', removeProperty);
 
 module.exports = router;

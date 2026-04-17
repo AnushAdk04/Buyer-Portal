@@ -6,6 +6,7 @@ dotenv.config();
 const authRoutes = require('./routes/authRoutes');
 const favouriteRoutes = require('./routes/favouriteRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/favourites', favouriteRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/users', userRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -10,7 +10,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const storage = new CloudinaryStorage({
+// storage for property images
+const propertyStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'buyer-portal/properties',
@@ -19,9 +20,24 @@ const storage = new CloudinaryStorage({
   },
 });
 
-const upload = multer({
-  storage,
+// storage for avatar images
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'buyer-portal/avatars',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 300, height: 300, crop: 'fill', gravity: 'face', quality: 'auto' }],
+  },
+});
+
+const uploadProperty = multer({
+  storage: propertyStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-module.exports = { cloudinary, upload };
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
+
+module.exports = { cloudinary, uploadProperty, uploadAvatar };
