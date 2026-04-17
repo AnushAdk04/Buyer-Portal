@@ -5,11 +5,11 @@ const ConfirmDialog = ({ isOpen, title, message, confirmText, cancelText, onConf
 
   return (
     <div
-      className="fixed inset-0 z-[90] bg-slate-950/65 backdrop-blur-sm flex items-center justify-center px-4"
+      className="fixed inset-0 z-[90] bg-slate-950/65 flex items-center justify-center px-4"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-6"
+        className="w-full max-w-md rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f0f0f] p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3 mb-4">
@@ -27,7 +27,7 @@ const ConfirmDialog = ({ isOpen, title, message, confirmText, cancelText, onConf
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
+            className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0f0f0f] text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
           >
             {cancelText}
           </button>

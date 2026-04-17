@@ -229,26 +229,26 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0f0f0f]">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="bg-slate-900 rounded-3xl px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between shadow-xl shadow-slate-200/60 dark:shadow-none border border-slate-800">
+        <div className="bg-slate-900 dark:bg-[#0f0f0f] rounded-3xl px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between border border-slate-800">
           <div>
             <p className="text-blue-300 text-sm uppercase tracking-[0.24em] font-semibold mb-2">Property dashboard</p>
             <h2 className="text-2xl md:text-3xl font-semibold mb-2">Welcome back, {user?.name}</h2>
             <p className="text-slate-300 text-sm max-w-2xl">Browse listings, open a property for a full detail view, and manage favourites from one place.</p>
           </div>
           <div className="grid grid-cols-3 gap-3 sm:min-w-[360px]">
-            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3">
               <p className="text-2xl font-semibold">{properties.length}</p>
               <p className="text-slate-300 text-sm">Available</p>
             </div>
-            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3">
               <p className="text-2xl font-semibold">{favouriteCount}</p>
               <p className="text-slate-300 text-sm">Favourites</p>
             </div>
-            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 backdrop-blur-sm">
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3">
               <p className="text-2xl font-semibold">{myCount}</p>
               <p className="text-slate-300 text-sm">Your Properties</p>
             </div>
@@ -271,21 +271,21 @@ const DashboardPage = () => {
           <button
             onClick={() => setActiveTab('all')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+              ${activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#0f0f0f] text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             All Properties ({properties.length})
           </button>
           <button
             onClick={() => setActiveTab('favourites')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'favourites' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+              ${activeTab === 'favourites' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#0f0f0f] text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             My Favourites ({favouriteCount})
           </button>
           <button
             onClick={() => setActiveTab('mine')}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors
-              ${activeTab === 'mine' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+              ${activeTab === 'mine' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#0f0f0f] text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
           >
             My Properties ({myCount})
           </button>

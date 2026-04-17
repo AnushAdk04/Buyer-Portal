@@ -26,7 +26,7 @@ const PropertyCard = ({
           onOpen?.(property);
         }
       }}
-      className="group bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-slate-200/70 dark:hover:shadow-slate-950/70 transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-950"
+      className="group bg-white dark:bg-[#0f0f0f] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-[#0f0f0f]"
     >
       <div className="relative overflow-hidden">
         <img
@@ -36,7 +36,7 @@ const PropertyCard = ({
           onError={(e) => { e.target.src = 'https://placehold.co/400x200?text=No+Image'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
-        <div className="absolute left-4 bottom-4 inline-flex items-center gap-2 rounded-full bg-white/90 dark:bg-slate-900/80 backdrop-blur px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
+        <div className="absolute left-4 bottom-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-[#0f0f0f] px-3 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-200">
           <FaMapMarkerAlt className="text-blue-600" />
           {property.location || 'Location unavailable'}
         </div>
@@ -46,7 +46,7 @@ const PropertyCard = ({
             onToggleFavourite(property.id, property.isFavourite);
           }}
           disabled={loading === property.id}
-          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-lg shadow-slate-900/10 dark:shadow-black/40 flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-50"
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-[#0f0f0f] flex items-center justify-center hover:scale-110 transition-transform disabled:opacity-50"
         >
           {loading === property.id ? (
             <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -63,7 +63,7 @@ const PropertyCard = ({
                   e.stopPropagation();
                   onEdit?.(property);
                 }}
-                className="h-10 px-3 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-lg shadow-slate-900/10 dark:shadow-black/40 flex items-center gap-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-200/40 transition-colors"
+                className="h-10 px-3 rounded-full bg-white dark:bg-[#0f0f0f] flex items-center gap-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-200/40 transition-colors"
               >
                 <FiEdit2 className="text-sm" />
                 <span className="text-xs font-semibold">Edit</span>
@@ -76,7 +76,7 @@ const PropertyCard = ({
                 onDelete?.(property.id);
               }}
               disabled={deleting === property.id}
-              className="h-10 px-3 rounded-full bg-white/95 dark:bg-slate-900/90 shadow-lg shadow-slate-900/10 dark:shadow-black/40 flex items-center gap-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-200/40 transition-colors disabled:opacity-50"
+                className="h-10 px-3 rounded-full bg-white dark:bg-[#0f0f0f] flex items-center gap-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-200/40 transition-colors disabled:opacity-50"
             >
               {deleting === property.id ? (
                 <span className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
