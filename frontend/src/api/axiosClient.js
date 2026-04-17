@@ -1,42 +1,44 @@
-const jwt = require('jsonwebtoken');
+import axios from 'axios';
 
-const protect = (req, res, next) => {
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  const accessTokenHeader = req.headers['x-access-token'];
+const axiosClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+});
 
-  let token = null;
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
 
-  if (typeof authHeader === 'string') {
-    const bearerMatch = authHeader.match(/^Bearer\s+(.+)$/i);
-    if (bearerMatch?.[1]) {
-      token = bearerMatch[1].trim();
+  if (token) {
+    if (!config.headers) {
+      config.headers = {};
+    }
+
+    if (typeof config.headers.set === 'function') {
+      config.headers.set('Authorization', `Bearer ${token}`);
+      config.headers.set('x-access-token', token);
+    } else {
+      config.headers.Authorization = `Bearer ${token}`;
+      config.headers['x-access-token'] = token;
     }
   }
 
-  if (!token && typeof accessTokenHeader === 'string') {
-    token = accessTokenHeader.trim();
-  }
+  return config;
+});
 
-  // Fallbacks for environments where Authorization header can be stripped.
-  if (!token && req.body?.token) {
-    token = String(req.body.token).trim();
-  }
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+    const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
 
-  if (!token && req.query?.token) {
-    token = String(req.query.token).trim();
-  }
+    if (status === 401 && !isAuthRequest) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
 
-  if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return Promise.reject(error);
   }
+);
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
-};
-
-module.exports = { protect };
+export default axiosClient;
