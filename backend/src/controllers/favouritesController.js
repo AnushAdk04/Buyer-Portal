@@ -17,7 +17,7 @@ const add = async (req, res) => {
     if (!propertyId)
       return res.status(400).json({ message: 'propertyId is required' });
 
-    const [props] = await db.query('SELECT id FROM properties WHERE id = ?', [propertyId]);
+    const { rows: props } = await db.query('SELECT id FROM properties WHERE id = $1', [propertyId]);
     if (props.length === 0)
       return res.status(404).json({ message: 'Property not found' });
 
@@ -48,7 +48,9 @@ const remove = async (req, res) => {
 
 const listAllProperties = async (req, res) => {
   try {
-    const [properties] = await db.query('SELECT * FROM properties');
+    const { rows: properties } = await db.query(
+      'SELECT * FROM properties ORDER BY created_at DESC'
+    );
     const favourites = await getFavourites(req.user.id);
     const favIds = new Set(favourites.map(f => f.id));
 
