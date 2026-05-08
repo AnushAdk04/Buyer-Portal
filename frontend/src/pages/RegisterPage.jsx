@@ -9,7 +9,7 @@ const RegisterPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'buyer' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -110,18 +110,9 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Role</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-[#0f0f0f] text-gray-800 dark:text-slate-100"
-              >
-                <option value="buyer">Buyer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Admin access is assigned only by an existing admin from the admin panel.
+            </p>
 
             <button
               type="submit"

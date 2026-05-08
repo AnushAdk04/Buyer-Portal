@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiChevronDown, FiHome, FiUser, FiShield, FiLogOut, FiMoon, FiSun } from 'react-icons/fi';
+import { FiChevronDown, FiHome, FiUser, FiShield, FiLogOut, FiMoon, FiSun, FiBarChart2 } from 'react-icons/fi';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -128,6 +128,22 @@ const Navbar = () => {
                   )}
                   <span>View profile</span>
                 </button>
+
+                {user?.role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate('/admin');
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer border-t border-slate-100 dark:border-slate-800"
+                  >
+                    <span className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                      <FiBarChart2 />
+                    </span>
+                    <span>Admin Dashboard</span>
+                  </button>
+                )}
 
                 <button
                   type="button"

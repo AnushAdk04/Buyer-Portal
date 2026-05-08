@@ -8,6 +8,8 @@ import DashboardPage from './pages/DashboardPage';
 import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import ProfilePage from './pages/ProfilePage';
 import SellerProfilePage from './pages/SellerProfilePage';
+import AdminPage from './pages/AdminPage';
+import NotAdminPage from './pages/NotAdminPage';
 
 function App() {
   return (
@@ -47,6 +49,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <SellerProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/not-admin"
+              element={
+                <ProtectedRoute>
+                  <NotAdminPage />
                 </ProtectedRoute>
               }
             />

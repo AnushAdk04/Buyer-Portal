@@ -4,7 +4,7 @@ const { findByEmail, createUser, findById } = require('../models/userModel');
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password)
       return res.status(400).json({ message: 'Name, email and password are required' });
@@ -17,7 +17,7 @@ const register = async (req, res) => {
       return res.status(409).json({ message: 'Email already registered' });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const userId = await createUser(name, email, passwordHash, role || 'buyer');
+    const userId = await createUser(name, email, passwordHash, 'buyer');
     const user = await findById(userId);
 
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
