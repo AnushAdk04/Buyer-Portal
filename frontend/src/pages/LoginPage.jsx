@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { FiHome } from 'react-icons/fi';
 
 const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, updateUser } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ email: '', password: '' });
@@ -21,6 +21,23 @@ const LoginPage = () => {
     try {
       const { data } = await axiosClient.post('/auth/login', form);
       login(data.user, data.token);
+
+      // Fetch full profile (includes avatar_url) and sync into AuthContext
+      try {
+        const profileResp = await axiosClient.get('/users/profile');
+        const fullUser = profileResp.data.user;
+        const clientUser = {
+          ...fullUser,
+          avatar_url: fullUser.avatar_url
+            ? `${fullUser.avatar_url}${fullUser.avatar_url.includes('?') ? '&' : '?'}cb=${Date.now()}`
+            : fullUser.avatar_url,
+        };
+        updateUser(clientUser);
+      } catch (profileErr) {
+        // non-fatal: continue without blocking navigation
+        console.warn('Could not fetch full profile after login', profileErr);
+      }
+
       toast.success(`Welcome back, ${data.user.name}!`);
       navigate('/dashboard');
     } catch (err) {

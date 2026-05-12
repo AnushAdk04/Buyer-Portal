@@ -83,6 +83,9 @@ const ProfilePage = () => {
           phone: loaded?.phone || '',
           bio: loaded?.bio || '',
         });
+        // Ensure the global auth user is synced with the freshly loaded profile
+        // so the Navbar shows the latest avatar immediately after login.
+        mergeUserState(loaded);
       } catch (err) {
         toast.error(err.response?.data?.message || 'Could not load your profile');
       } finally {
@@ -95,17 +98,16 @@ const ProfilePage = () => {
 
   const mergeUserState = (nextUser) => {
     setProfile(nextUser);
-    updateUser({
-      ...user,
-      id: nextUser.id,
-      name: nextUser.name,
-      email: nextUser.email,
-      role: nextUser.role,
-      phone: nextUser.phone,
-      bio: nextUser.bio,
-      avatar_url: nextUser.avatar_url,
-      created_at: nextUser.created_at,
-    });
+    // Replace the auth user object with the fresh user returned by the API
+    // to ensure the navbar and other components reflect the latest avatar_url and fields.
+    // Append a cache-busting query param on the client-side so the navbar image reloads
+    const clientUser = {
+      ...nextUser,
+      avatar_url: nextUser.avatar_url
+        ? `${nextUser.avatar_url}${nextUser.avatar_url.includes('?') ? '&' : '?'}cb=${Date.now()}`
+        : nextUser.avatar_url,
+    };
+    updateUser(clientUser);
   };
 
   const handleProfileInputChange = (e) => {
