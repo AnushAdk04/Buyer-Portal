@@ -9,6 +9,7 @@ const {
   changeAvatar,
   removeAvatar,
   changePassword,
+  getDashboardStats,
 } = require('../controllers/userController');
 
 router.use(protect);
@@ -19,5 +20,6 @@ router.put('/profile', editProfile);
 router.put('/profile/avatar', uploadAvatar.single('avatar'), changeAvatar);
 router.delete('/profile/avatar', removeAvatar);
 router.put('/profile/password', changePassword);
+router.get('/dashboard-stats', getDashboardStats);
 
 module.exports = router;

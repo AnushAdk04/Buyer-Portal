@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS inquiries (
 - [x] Inquiry form modal (pre-filled with property & user info)
 - [x] Inbox page for sellers — view inquiries with property context
 - [x] Mark as read / Reply flow (Reply is direct via provided phone/email)
-- [ ] Inquiry count shown on seller dashboard
+- [x] Inquiry count shown on seller dashboard
 
 #### 4.2 — Notifications System
 

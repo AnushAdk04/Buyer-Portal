@@ -5,8 +5,6 @@ const db = require('../config/db');
 const { Resend } = require('resend');
 const { findByEmail, createUser, findById } = require('../models/userModel');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -81,6 +79,13 @@ const forgotPassword = async (req, res) => {
     );
 
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${resetToken}`;
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not defined in environment variables');
+      return res.status(500).json({ message: 'Email service is not configured.' });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     await resend.emails.send({
       from: 'BuyerPortal <noreply@anushadhikari.com.np>',

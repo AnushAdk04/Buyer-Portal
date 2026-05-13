@@ -125,4 +125,26 @@ const changePassword = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, getPublicProfile, editProfile, changeAvatar, removeAvatar, changePassword };
+const getDashboardStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const db = require('../config/db');
+
+    const [{ rows: propStats }, { rows: inquiryStats }, { rows: favStats }] = await Promise.all([
+      db.query('SELECT COUNT(*) FROM properties WHERE uploaded_by = $1', [userId]),
+      db.query('SELECT COUNT(*) FROM inquiries WHERE receiver_id = $1', [userId]),
+      db.query('SELECT COUNT(*) FROM favourites WHERE user_id = $1', [userId]),
+    ]);
+
+    res.json({
+      properties: parseInt(propStats[0].count, 10),
+      inquiries: parseInt(inquiryStats[0].count, 10),
+      favourites: parseInt(favStats[0].count, 10),
+    });
+  } catch (err) {
+    console.error('Get dashboard stats error:', err);
+    res.status(500).json({ message: 'Could not fetch dashboard stats' });
+  }
+};
+
+module.exports = { getProfile, getPublicProfile, editProfile, changeAvatar, removeAvatar, changePassword, getDashboardStats };

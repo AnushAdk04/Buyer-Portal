@@ -36,6 +36,7 @@ const DashboardPage = () => {
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [myProperties, setMyProperties] = useState([]);
   const [favouriteIds, setFavouriteIds] = useState(new Set());
+  const [stats, setStats] = useState({ properties: 0, inquiries: 0, favourites: 0 });
 
   // UI state
   const [activeTab, setActiveTab] = useState('all');
@@ -86,13 +87,15 @@ const DashboardPage = () => {
   // Fetch favourites & my properties
   const fetchSideData = useCallback(async () => {
     try {
-      const [{ data: favData }, { data: mineData }] = await Promise.all([
+      const [{ data: favData }, { data: mineData }, { data: statData }] = await Promise.all([
         axiosClient.get('/favourites/properties'),
         axiosClient.get('/properties/my'),
+        axiosClient.get('/user/dashboard-stats'),
       ]);
       const allProps = favData.properties || [];
       setFavouriteIds(new Set(allProps.filter(p => p.isFavourite).map(p => p.id)));
       setMyProperties(mineData.properties || []);
+      setStats(statData);
     } catch { /* silent */ }
   }, []);
 
@@ -230,15 +233,15 @@ const DashboardPage = () => {
             <h2 className="text-2xl md:text-3xl font-bold font-heading mb-2">Welcome back, {user?.name}</h2>
             <p className="text-slate-300 text-sm max-w-2xl">Search, filter, and discover properties. Manage your listings and favourites.</p>
           </div>
-          <div className="grid grid-cols-3 gap-3 sm:min-w-[340px]">
-            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-center">
-              <p className="text-2xl font-bold">{pagination.total}</p><p className="text-slate-300 text-xs">Available</p>
+          <div className="grid grid-cols-3 gap-3 sm:min-w-[400px]">
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-center cursor-pointer hover:bg-white/20 transition-colors" onClick={() => navigate('/dashboard/inquiries')}>
+              <p className="text-2xl font-bold">{stats.inquiries}</p><p className="text-slate-300 text-[10px] uppercase tracking-wider">Inquiries</p>
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-center">
-              <p className="text-2xl font-bold">{favouriteIds.size}</p><p className="text-slate-300 text-xs">Favourites</p>
+              <p className="text-2xl font-bold">{stats.favourites}</p><p className="text-slate-300 text-[10px] uppercase tracking-wider">Saved</p>
             </div>
             <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-center">
-              <p className="text-2xl font-bold">{myCount}</p><p className="text-slate-300 text-xs">My Listings</p>
+              <p className="text-2xl font-bold">{stats.properties}</p><p className="text-slate-300 text-[10px] uppercase tracking-wider">My Listings</p>
             </div>
           </div>
         </div>
