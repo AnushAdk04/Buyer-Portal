@@ -12,10 +12,10 @@ const {
 
 router.use(protect);
 
-router.post('/', uploadProperty.single('image'), uploadPropertyHandler);
+router.post('/', uploadProperty.array('images', 10), uploadPropertyHandler);
 router.get('/my', getMyProperties);
 router.get('/:id', getSingleProperty);
-router.put('/:id', uploadProperty.single('image'), editProperty);
+router.put('/:id', uploadProperty.array('images', 10), editProperty);
 router.delete('/:id', removeProperty);
 
 module.exports = router;

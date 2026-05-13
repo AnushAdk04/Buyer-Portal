@@ -1,10 +1,20 @@
 const db = require('../config/db');
 
-const createProperty = async ({ title, location, price, description, imageUrl, imagePublicId, uploadedBy }) => {
+const createProperty = async ({ 
+  title, location, price, description, imageUrl, imagePublicId, uploadedBy,
+  propertyType, status, bedrooms, bathrooms, areaSqft, amenities, yearBuilt, parkingSpaces
+}) => {
   const { rows } = await db.query(
-    `INSERT INTO properties (title, location, price, description, image_url, image_public_id, uploaded_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-    [title, location, price, description, imageUrl, imagePublicId, uploadedBy]
+    `INSERT INTO properties (
+      title, location, price, description, image_url, image_public_id, uploaded_by,
+      property_type, status, bedrooms, bathrooms, area_sqft, amenities, year_built, parking_spaces
+     )
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
+    [
+      title, location, price, description, imageUrl, imagePublicId, uploadedBy,
+      propertyType || 'house', status || 'for_sale', bedrooms || 0, bathrooms || 0, 
+      areaSqft || null, amenities || [], yearBuilt || null, parkingSpaces || 0
+    ]
   );
   return rows[0].id;
 };
@@ -40,21 +50,40 @@ const deleteProperty = async (id, userId) => {
   return rowCount;
 };
 
-const updateProperty = async (id, userId, { title, location, price, description }) => {
+const updateProperty = async (id, userId, { 
+  title, location, price, description,
+  propertyType, status, bedrooms, bathrooms, areaSqft, amenities, yearBuilt, parkingSpaces
+}) => {
   const { rowCount } = await db.query(
-    `UPDATE properties SET title = $1, location = $2, price = $3, description = $4
-     WHERE id = $5 AND uploaded_by = $6`,
-    [title, location, price, description, id, userId]
+    `UPDATE properties SET 
+      title = $1, location = $2, price = $3, description = $4,
+      property_type = $5, status = $6, bedrooms = $7, bathrooms = $8,
+      area_sqft = $9, amenities = $10, year_built = $11, parking_spaces = $12
+     WHERE id = $13 AND uploaded_by = $14`,
+    [
+      title, location, price, description,
+      propertyType, status, bedrooms, bathrooms, areaSqft, amenities, yearBuilt, parkingSpaces,
+      id, userId
+    ]
   );
   return rowCount;
 };
 
-const updatePropertyWithImage = async (id, userId, { title, location, price, description, imageUrl, imagePublicId }) => {
+const updatePropertyWithImage = async (id, userId, { 
+  title, location, price, description, imageUrl, imagePublicId,
+  propertyType, status, bedrooms, bathrooms, areaSqft, amenities, yearBuilt, parkingSpaces
+}) => {
   const { rowCount } = await db.query(
     `UPDATE properties
-     SET title = $1, location = $2, price = $3, description = $4, image_url = $5, image_public_id = $6
-     WHERE id = $7 AND uploaded_by = $8`,
-    [title, location, price, description, imageUrl, imagePublicId, id, userId]
+     SET title = $1, location = $2, price = $3, description = $4, image_url = $5, image_public_id = $6,
+         property_type = $7, status = $8, bedrooms = $9, bathrooms = $10,
+         area_sqft = $11, amenities = $12, year_built = $13, parking_spaces = $14
+     WHERE id = $15 AND uploaded_by = $16`,
+    [
+      title, location, price, description, imageUrl, imagePublicId,
+      propertyType, status, bedrooms, bathrooms, areaSqft, amenities, yearBuilt, parkingSpaces,
+      id, userId
+    ]
   );
   return rowCount;
 };

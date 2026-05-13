@@ -17,15 +17,30 @@ const add = async (req, res) => {
     if (!propertyId)
       return res.status(400).json({ message: 'propertyId is required' });
 
-    const { rows: props } = await db.query('SELECT id FROM properties WHERE id = $1', [propertyId]);
+    const { rows: props } = await db.query('SELECT id, uploaded_by, title FROM properties WHERE id = $1', [propertyId]);
     if (props.length === 0)
       return res.status(404).json({ message: 'Property not found' });
+
+    const property = props[0];
 
     const already = await isFavourite(req.user.id, propertyId);
     if (already)
       return res.status(409).json({ message: 'Already in favourites' });
 
     await addFavourite(req.user.id, propertyId);
+
+    // Notify the owner if someone else favourited their property
+    if (property.uploaded_by !== req.user.id) {
+      const Notification = require('../models/notificationModel');
+      await Notification.create(
+        property.uploaded_by,
+        'favourite',
+        'Property Favourited',
+        `Someone added "${property.title}" to their favourites`,
+        `/dashboard/properties/${propertyId}`
+      );
+    }
+
     res.status(201).json({ message: 'Added to favourites' });
   } catch (err) {
     console.error('Add favourite error:', err);

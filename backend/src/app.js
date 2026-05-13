@@ -9,6 +9,9 @@ const favouriteRoutes = require('./routes/favouriteRoutes');
 const propertyRoutes = require('./routes/propertyRoutes');
 const userRoutes = require('./routes/userRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const searchRoutes = require('./routes/searchRoutes');
+const inquiryRoutes = require('./routes/inquiryRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -35,6 +38,9 @@ app.use('/api/favourites', favouriteRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

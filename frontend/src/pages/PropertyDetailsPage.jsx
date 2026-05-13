@@ -5,17 +5,17 @@ import Navbar from '../components/Navbar';
 import { useAuth } from '../context/AuthContext';
 import EditPropertyModal from '../components/EditPropertyModal';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ContactSellerModal from '../components/ContactSellerModal';
 import toast from 'react-hot-toast';
-import {
-  FaArrowLeft,
-  FaHeart,
-  FaMapMarkerAlt,
-  FaRupeeSign,
-  FaRegCheckCircle,
-  FaRegStar,
-  FaHome,
-} from 'react-icons/fa';
-import { FiEdit2, FiExternalLink, FiTrash2 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
+import { FaHeart, FaMapMarkerAlt, FaRupeeSign } from 'react-icons/fa';
+import { IoBedOutline, IoWaterOutline, IoCarOutline } from 'react-icons/io5';
+import { TbRulerMeasure } from 'react-icons/tb';
+import { FiArrowLeft, FiEdit2, FiExternalLink, FiTrash2, FiChevronLeft, FiChevronRight, FiCalendar, FiMessageCircle, FiShare2 } from 'react-icons/fi';
+
+const STATUS_LABELS = { for_sale: 'For Sale', for_rent: 'For Rent', sold: 'Sold', under_contract: 'Under Contract' };
+const STATUS_COLORS = { for_sale: 'bg-emerald-500', for_rent: 'bg-blue-500', sold: 'bg-red-500', under_contract: 'bg-amber-500' };
+const TYPE_LABELS = { house: 'House', apartment: 'Apartment', land: 'Land', commercial: 'Commercial', villa: 'Villa', condo: 'Condo' };
 
 const PropertyDetailsPage = () => {
   const { user } = useAuth();
@@ -24,159 +24,146 @@ const PropertyDetailsPage = () => {
   const location = useLocation();
 
   const [property, setProperty] = useState(location.state?.property || null);
+  const [images, setImages] = useState([]);
+  const [activeImg, setActiveImg] = useState(0);
   const [loading, setLoading] = useState(!location.state?.property);
   const [saving, setSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editImageFile, setEditImageFile] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', location: '', price: '', description: '' });
+  const [editImageFiles, setEditImageFiles] = useState([]);
+  const [editForm, setEditForm] = useState({ title: '', location: '', price: '', description: '', propertyType: 'house', status: 'for_sale', bedrooms: '', bathrooms: '', areaSqft: '', parkingSpaces: '' });
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const isOwner = Number(property?.uploaded_by) === Number(user?.id);
-
-  const formatPrice = (price) =>
-    new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
+  const formatPrice = (price) => new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
 
   useEffect(() => {
     const loadProperty = async () => {
-      if (property?.id === Number(propertyId) && property?.uploaded_by_name) {
-        return;
-      }
-
+      if (property?.id === Number(propertyId) && property?.uploaded_by_name && !loading) return;
       setLoading(true);
       try {
         const [{ data: propertyData }, { data: favData }] = await Promise.all([
           axiosClient.get(`/properties/${propertyId}`),
           axiosClient.get('/favourites/properties'),
         ]);
-
-        const favoriteIds = new Set((favData.properties || []).map((item) => item.id));
+        const favoriteIds = new Set((favData.properties || []).map(i => i.id));
         const found = propertyData.property;
-
-        if (!found) {
-          toast.error('Property not found');
-          navigate('/dashboard', { replace: true });
-          return;
-        }
-
+        if (!found) { toast.error('Property not found'); navigate('/dashboard', { replace: true }); return; }
         setProperty({ ...found, isFavourite: favoriteIds.has(found.id) });
-      } catch {
-        toast.error('Failed to load property details');
-        navigate('/dashboard', { replace: true });
-      } finally {
-        setLoading(false);
-      }
+        // Build images array: primary + additional
+        const allImages = [found.image_url];
+        if (found.images && found.images.length > 0) {
+          found.images.forEach(img => allImages.push(img.image_url));
+        }
+        setImages(allImages);
+      } catch { toast.error('Failed to load property'); navigate('/dashboard', { replace: true }); }
+      finally { setLoading(false); }
     };
-
     loadProperty();
-  }, [navigate, property?.id, propertyId]);
+  }, [navigate, propertyId]);
+
+  // Set images when property is loaded from state
+  useEffect(() => {
+    if (property && images.length === 0 && property.image_url) {
+      const allImages = [property.image_url];
+      if (property.images && property.images.length > 0) {
+        property.images.forEach(img => allImages.push(img.image_url));
+      }
+      setImages(allImages);
+    }
+  }, [property]);
 
   const handleToggleFavourite = async () => {
     if (!property) return;
-
     setSaving(true);
-    const toastId = toast.loading(property.isFavourite ? 'Removing from favourites...' : 'Adding to favourites...');
-
+    const tid = toast.loading(property.isFavourite ? 'Removing...' : 'Adding...');
     try {
-      if (property.isFavourite) {
-        await axiosClient.delete(`/favourites/${property.id}`);
-        toast.success('Removed from favourites', { id: toastId });
-      } else {
-        await axiosClient.post('/favourites', { propertyId: property.id });
-        toast.success('Added to favourites', { id: toastId });
-      }
-
-      setProperty((current) => current ? { ...current, isFavourite: !current.isFavourite } : current);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not update favourite', { id: toastId });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEditFormChange = (e) => {
-    setEditForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+      if (property.isFavourite) { await axiosClient.delete(`/favourites/${property.id}`); toast.success('Removed', { id: tid }); }
+      else { await axiosClient.post('/favourites', { propertyId: property.id }); toast.success('Added ♥', { id: tid }); }
+      setProperty(c => c ? { ...c, isFavourite: !c.isFavourite } : c);
+    } catch (err) { toast.error(err.response?.data?.message || 'Error', { id: tid }); }
+    finally { setSaving(false); }
   };
 
   const handleOpenEdit = () => {
     if (!property) return;
-
-    setEditImageFile(null);
-    setEditForm({
-      title: property.title || '',
-      location: property.location || '',
-      price: property.price ?? '',
-      description: property.description || '',
-    });
+    setEditImageFiles([]);
+    setEditForm({ title: property.title || '', location: property.location || '', price: property.price ?? '', description: property.description || '', propertyType: property.property_type || 'house', status: property.status || 'for_sale', bedrooms: property.bedrooms || '', bathrooms: property.bathrooms || '', areaSqft: property.area_sqft || '', parkingSpaces: property.parking_spaces || '' });
     setIsEditOpen(true);
   };
+
+  const handleEditFormChange = (e) => setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!property) return;
-
-    if (!editForm.title || !editForm.location || !editForm.price) {
-      toast.error('Title, location and price are required');
-      return;
-    }
-
+    if (!editForm.title || !editForm.location || !editForm.price) { toast.error('Title, location and price are required'); return; }
     setEditing(true);
-    const toastId = toast.loading('Updating property...');
-
+    const tid = toast.loading('Updating...');
     try {
       const payload = new FormData();
-      payload.append('title', editForm.title.trim());
-      payload.append('location', editForm.location.trim());
-      payload.append('price', String(Number(editForm.price)));
-      payload.append('description', editForm.description.trim());
-      if (editImageFile) {
-        payload.append('image', editImageFile);
-      }
-
-      const { data } = await axiosClient.put(`/properties/${property.id}`, payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      setProperty((prev) => (prev ? { ...prev, ...data.property, isFavourite: prev.isFavourite } : prev));
-      setIsEditOpen(false);
-      setEditImageFile(null);
-      toast.success('Property updated successfully', { id: toastId });
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not update property', { id: toastId });
-    } finally {
-      setEditing(false);
-    }
+      Object.keys(editForm).forEach(k => { if (editForm[k] !== '') payload.append(k, typeof editForm[k] === 'string' ? editForm[k].trim() : editForm[k]); });
+      if (editImageFiles.length > 0) editImageFiles.forEach(f => payload.append('images', f));
+      const { data } = await axiosClient.put(`/properties/${property.id}`, payload, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setProperty(prev => prev ? { ...prev, ...data.property, isFavourite: prev.isFavourite } : prev);
+      setIsEditOpen(false); setEditImageFiles([]);
+      toast.success('Updated', { id: tid });
+    } catch (err) { toast.error(err.response?.data?.message || 'Error', { id: tid }); }
+    finally { setEditing(false); }
   };
 
   const handleConfirmDelete = async () => {
     if (!property) return;
-
     setDeleting(true);
-    const toastId = toast.loading('Deleting property...');
-
+    const tid = toast.loading('Deleting...');
     try {
       await axiosClient.delete(`/properties/${property.id}`);
-      toast.success('Property deleted successfully', { id: toastId });
+      toast.success('Deleted', { id: tid });
       navigate('/dashboard', { replace: true });
+    } catch (err) { toast.error(err.response?.data?.message || 'Error', { id: tid }); }
+    finally { setDeleting(false); }
+  };
+
+  const prevImg = () => setActiveImg(i => (i - 1 + images.length) % images.length);
+  const nextImg = () => setActiveImg(i => (i + 1) % images.length);
+
+  const specs = [
+    property?.bedrooms > 0 && { icon: IoBedOutline, label: 'Bedrooms', value: property.bedrooms },
+    property?.bathrooms > 0 && { icon: IoWaterOutline, label: 'Bathrooms', value: property.bathrooms },
+    property?.area_sqft > 0 && { icon: TbRulerMeasure, label: 'Area', value: `${Number(property.area_sqft).toLocaleString()} sqft` },
+    property?.parking_spaces > 0 && { icon: IoCarOutline, label: 'Parking', value: property.parking_spaces },
+    property?.year_built && { icon: FiCalendar, label: 'Built', value: property.year_built },
+  ].filter(Boolean);
+
+  const handleShare = async () => {
+    if (!property) return;
+    const shareData = {
+      title: property.title,
+      text: `Check out this property: ${property.title} in ${property.location} for ${formatPrice(property.price)}`,
+      url: window.location.href
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success('Link copied to clipboard!');
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Could not delete property', { id: toastId });
-    } finally {
-      setDeleting(false);
+      if (err.name !== 'AbortError') {
+        toast.error('Could not share property');
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0f0f0f]">
       <Navbar />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors mb-6"
-        >
-          <FaArrowLeft />
-          Back to properties
+        <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-6">
+          <FiArrowLeft /> Back to properties
         </button>
 
         {loading ? (
@@ -184,159 +171,137 @@ const PropertyDetailsPage = () => {
             <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : property ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-8 items-start">
-            <section className="relative">
-              <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 dark:bg-[#0f0f0f]">
-                <img
-                  src={property.image_url}
-                  alt={property.title}
-                  className="w-full h-[360px] sm:h-[460px] object-cover"
-                  onError={(e) => {
-                    e.target.src = 'https://placehold.co/1200x800?text=No+Image';
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/50 via-transparent to-transparent" />
-                <div className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-800">
-                  <FaHome className="text-blue-600" />
-                  {user?.role === 'admin' ? 'Admin view' : 'Property view'}
-                </div>
-                <div className="absolute left-5 bottom-5 right-5 flex flex-wrap gap-3">
-                  <span className="inline-flex items-center gap-2 rounded-full bg-slate-950/80 text-white px-4 py-2 text-sm">
-                    <FaMapMarkerAlt className="text-blue-300" />
-                    {property.location || 'Location unavailable'}
-                  </span>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-slate-950/80 text-white px-4 py-2 text-sm">
-                    <FaRegStar className="text-amber-300" />
-                    Premium listing
-                  </span>
-                </div>
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-8 items-start">
+            {/* Left — Image Gallery */}
+            <section>
+              <div className="relative overflow-hidden rounded-2xl bg-slate-900 group">
+                <img src={images[activeImg] || property.image_url} alt={property.title} className="w-full h-[360px] sm:h-[480px] object-cover transition-transform duration-500"
+                  onError={(e) => { e.target.src = 'https://placehold.co/1200x800?text=No+Image'; }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                {/* Status badge */}
+                <span className={`absolute top-4 left-4 px-3 py-1.5 rounded-lg text-xs font-bold text-white uppercase tracking-wider ${STATUS_COLORS[property.status] || 'bg-emerald-500'}`}>
+                  {STATUS_LABELS[property.status] || 'For Sale'}
+                </span>
+
+                {/* Image nav arrows */}
+                {images.length > 1 && (
+                  <>
+                    <button onClick={prevImg} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"><FiChevronLeft className="text-lg" /></button>
+                    <button onClick={nextImg} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"><FiChevronRight className="text-lg" /></button>
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                      {images.map((_, i) => (
+                        <button key={i} onClick={() => setActiveImg(i)} className={`w-2 h-2 rounded-full transition-all ${i === activeImg ? 'bg-white w-5' : 'bg-white/50'}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Image counter */}
+                {images.length > 1 && (
+                  <span className="absolute top-4 right-4 px-2.5 py-1 rounded-lg bg-black/50 text-white text-xs font-medium">{activeImg + 1}/{images.length}</span>
+                )}
               </div>
+
+              {/* Thumbnail row */}
+              {images.length > 1 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                  {images.map((url, i) => (
+                    <button key={i} onClick={() => setActiveImg(i)} className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === activeImg ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                      <img src={url} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </section>
 
-            <aside className="bg-white dark:bg-[#0f0f0f] rounded-[2rem] border border-white dark:border-slate-800 p-6 sm:p-8 lg:sticky lg:top-6">
-              <div className="flex items-start justify-between gap-4 mb-6">
+            {/* Right — Details */}
+            <aside className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 lg:sticky lg:top-24">
+              <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.26em] text-blue-600 font-semibold mb-3">Property details</p>
-                  <h1 className="text-2xl sm:text-3xl font-semibold text-slate-950 dark:text-slate-100 leading-tight">{property.title}</h1>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{TYPE_LABELS[property.property_type] || 'Property'}</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-3xl font-bold font-heading text-slate-900 dark:text-white leading-tight">{property.title}</h1>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 flex items-center gap-1.5"><FaMapMarkerAlt className="text-blue-500 text-xs" /> {property.location}</p>
                 </div>
-                <button
-                  onClick={handleToggleFavourite}
-                  disabled={saving}
-                  className="shrink-0 w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center disabled:opacity-50"
-                  aria-label={property.isFavourite ? 'Remove from favourites' : 'Add to favourites'}
-                >
-                  {saving ? (
-                    <span className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <FaHeart className={property.isFavourite ? 'text-red-500 text-lg' : 'text-slate-300 text-lg'} />
-                  )}
-                </button>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <button onClick={handleToggleFavourite} disabled={saving}
+                    className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center disabled:opacity-50" title="Favourite">
+                    {saving ? <span className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    : <FaHeart className={`text-lg ${property.isFavourite ? 'text-red-500' : 'text-slate-300'}`} />}
+                  </button>
+                  <button onClick={handleShare} className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center text-slate-600 dark:text-slate-300" title="Share">
+                    <FiShare2 className="text-lg" />
+                  </button>
+                </div>
               </div>
 
+              {/* Price */}
+              <div className="flex items-center gap-2 mb-6">
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1"><FaRupeeSign className="text-xl" />{formatPrice(property.price)}</p>
+              </div>
+
+              {/* Specs grid */}
+              {specs.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {specs.map((s, i) => (
+                    <div key={i} className="rounded-xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-slate-800 p-3 text-center">
+                      <s.icon className="text-xl text-blue-500 mx-auto mb-1" />
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{s.value}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Seller info */}
               {property.uploaded_by_name && (
-                <div className="mb-6 rounded-2xl bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-slate-800 p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-slate-700 dark:text-slate-300 text-sm">
-                      <span className="font-medium">Property added by:</span> {property.uploaded_by_name.split(' ')[0]}
-                    </p>
-                    {!!property.uploaded_by && (
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/dashboard/sellers/${property.uploaded_by}`)}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-[#141414] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        <FiExternalLink className="text-sm" />
-                        View Seller Profile
-                      </button>
-                    )}
+                <div className="rounded-xl bg-slate-50 dark:bg-[#1a1a1a] border border-slate-200 dark:border-slate-800 p-4 mb-6 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">Listed by</p>
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm">{property.uploaded_by_name}</p>
                   </div>
+                  {!!property.uploaded_by && (
+                    <button onClick={() => navigate(`/dashboard/sellers/${property.uploaded_by}`)}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white dark:bg-[#151515] border border-slate-200 dark:border-slate-700 text-xs font-semibold text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                      <FiExternalLink className="text-sm" /> View Profile
+                    </button>
+                  )}
                 </div>
               )}
 
-              {isOwner && (
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <button
-                    type="button"
-                    onClick={handleOpenEdit}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
-                  >
-                    <FiEdit2 className="text-base" />
-                    Edit Property
+              {/* Owner actions */}
+              {isOwner ? (
+                <div className="flex gap-2 mb-6">
+                  <button onClick={handleOpenEdit} className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
+                    <FiEdit2 /> Edit
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteOpen(true)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
-                  >
-                    <FiTrash2 className="text-base" />
-                    Delete Property
+                  <button onClick={() => setIsDeleteOpen(true)} className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors">
+                    <FiTrash2 /> Delete
                   </button>
                 </div>
+              ) : (
+                <button onClick={() => { if (!user) { toast.error('Please login to contact seller'); navigate('/login'); } else { setIsContactOpen(true); } }} 
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 mb-6 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg shadow-blue-600/20">
+                  <FiMessageCircle className="text-xl" /> Contact Seller
+                </button>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div className="rounded-2xl bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2"><FaMapMarkerAlt className="text-blue-500" /> Location</p>
-                  <p className="text-slate-900 dark:text-slate-100 font-medium">{property.location || 'Not specified'}</p>
-                </div>
-                <div className="rounded-2xl bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-slate-800 p-4">
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2"><FaRupeeSign className="text-blue-500" /> Asking price</p>
-                  <p className="text-slate-900 dark:text-slate-100 font-semibold text-lg">{formatPrice(property.price)}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4 text-slate-600 dark:text-slate-300">
-                <p className="leading-7">
-                  {property.description || 'No description provided for this property.'}
+              {/* Description */}
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Description</h3>
+                <p className="text-slate-600 dark:text-slate-300 leading-7 text-sm whitespace-pre-line">
+                  {property.description || 'No description provided.'}
                 </p>
-
-                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0f0f0f] p-4 space-y-3">
-                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
-                    <FaRegCheckCircle className="text-emerald-500" />
-                    Quick property overview
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
-                    <FaRegCheckCircle className="text-emerald-500" />
-                    Tap the heart to save or remove from favourites
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-700 dark:text-slate-200">
-                    <FaRegCheckCircle className="text-emerald-500" />
-                    Works directly from the dashboard without extra navigation setup
-                  </div>
-                </div>
               </div>
             </aside>
-          </div>
+          </motion.div>
         ) : null}
 
-        <EditPropertyModal
-          isOpen={isEditOpen}
-          onClose={() => {
-            if (!editing) {
-              setIsEditOpen(false);
-              setEditImageFile(null);
-            }
-          }}
-          form={editForm}
-          onFormChange={handleEditFormChange}
-          onImageChange={setEditImageFile}
-          onSubmit={handleSaveEdit}
-          saving={editing}
-          imageFile={editImageFile}
-        />
-
-        <ConfirmDialog
-          isOpen={isDeleteOpen}
-          title="Delete Property"
-          message="Are you sure you want to delete this property? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
-          onConfirm={handleConfirmDelete}
-          onCancel={() => {
-            if (!deleting) setIsDeleteOpen(false);
-          }}
-          loading={deleting}
-        />
+        <EditPropertyModal isOpen={isEditOpen} onClose={() => { if (!editing) { setIsEditOpen(false); setEditImageFiles([]); } }} form={editForm} onFormChange={handleEditFormChange} onImageChange={setEditImageFiles} onSubmit={handleSaveEdit} saving={editing} imageFiles={editImageFiles} />
+        <ConfirmDialog isOpen={isDeleteOpen} title="Delete Property" message="Are you sure? This cannot be undone." confirmText="Delete" cancelText="Cancel" onConfirm={handleConfirmDelete} onCancel={() => { if (!deleting) setIsDeleteOpen(false); }} loading={deleting} />
+        <ContactSellerModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} property={property} />
       </main>
     </div>
   );
