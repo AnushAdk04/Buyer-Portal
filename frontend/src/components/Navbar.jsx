@@ -88,8 +88,8 @@ const Navbar = () => {
             className="group flex items-center gap-3 text-left cursor-pointer"
             aria-label="Go to homepage"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-              <FiHome className="text-white text-lg" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center transition-transform duration-200 group-hover:scale-105 bg-white shadow-sm border border-slate-100 dark:border-slate-700">
+              <img src="/logo.png" alt="BuyerPortal Logo" className="w-full h-full object-contain p-0.5" />
             </div>
             <div>
               <span className="text-lg font-bold tracking-tight text-slate-800 dark:text-slate-100 font-heading">BuyerPortal</span>
@@ -115,6 +115,7 @@ const Navbar = () => {
             <div ref={notifRef} className="relative">
               <button
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
+                aria-label={`Open notifications, ${unreadCount} unread`}
                 className="relative p-2 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <FiBell className="text-xl" />
@@ -212,22 +213,31 @@ const Navbar = () => {
                     </button>
                   )}
 
-                  <button onClick={() => { setIsMenuOpen(false); navigate('/dashboard/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors border-t border-slate-100 dark:border-slate-800">
-                    <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"><FiUser /></span>
-                    <span>View profile</span>
-                  </button>
+                  {user ? (
+                    <>
+                      <button onClick={() => { setIsMenuOpen(false); navigate('/dashboard/profile'); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors border-t border-slate-100 dark:border-slate-800">
+                        <span className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300"><FiUser /></span>
+                        <span>View profile</span>
+                      </button>
 
-                  {user?.role === 'admin' && (
-                    <button onClick={() => { setIsMenuOpen(false); navigate('/admin'); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors border-t border-slate-100 dark:border-slate-800">
-                      <span className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400"><FiBarChart2 /></span>
-                      <span>Admin Dashboard</span>
+                      {user?.role === 'admin' && (
+                        <button onClick={() => { setIsMenuOpen(false); navigate('/admin'); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#1a1a1a] transition-colors border-t border-slate-100 dark:border-slate-800">
+                          <span className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 dark:text-purple-400"><FiBarChart2 /></span>
+                          <span>Admin Dashboard</span>
+                        </button>
+                      )}
+
+                      <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-slate-100 dark:border-slate-800">
+                        <span className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center"><FiLogOut className="text-base" /></span>
+                        <span>Logout</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => { setIsMenuOpen(false); navigate('/login'); }} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-t border-slate-100 dark:border-slate-800">
+                      <span className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center"><FiUser className="text-base" /></span>
+                      <span>Login</span>
                     </button>
                   )}
-
-                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-slate-100 dark:border-slate-800">
-                    <span className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center"><FiLogOut className="text-base" /></span>
-                    <span>Logout</span>
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>

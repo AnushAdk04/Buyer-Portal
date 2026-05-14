@@ -1,4 +1,5 @@
 import { FiUploadCloud, FiX } from 'react-icons/fi';
+import LocationSelector from './LocationSelector';
 
 const UploadPropertyModal = ({
   isOpen,
@@ -137,6 +138,18 @@ const UploadPropertyModal = ({
             rows={4}
             className="md:col-span-2 w-full px-4 py-3 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#141414] text-slate-800 dark:text-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
+
+          <div className="md:col-span-2 mt-2">
+            <div className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-2">Map Location</div>
+            <LocationSelector 
+              lat={form.latitude} 
+              lng={form.longitude} 
+              onLocationSelect={({ lat, lng }) => {
+                onFormChange({ target: { name: 'latitude', value: lat } });
+                onFormChange({ target: { name: 'longitude', value: lng } });
+              }} 
+            />
+          </div>
 
           <div className="md:col-span-2 space-y-2 mt-4">
             <div className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-wider mb-2">Images (Max 10)</div>

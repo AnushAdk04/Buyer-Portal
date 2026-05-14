@@ -15,7 +15,9 @@ const extractPropertyFields = (body) => {
     areaSqft: body.areaSqft ? parseFloat(body.areaSqft) : null,
     amenities: body.amenities ? (Array.isArray(body.amenities) ? body.amenities : JSON.parse(body.amenities)) : [],
     yearBuilt: body.yearBuilt ? parseInt(body.yearBuilt, 10) : null,
-    parkingSpaces: body.parkingSpaces ? parseInt(body.parkingSpaces, 10) : 0
+    parkingSpaces: body.parkingSpaces ? parseInt(body.parkingSpaces, 10) : 0,
+    latitude: body.latitude ? parseFloat(body.latitude) : null,
+    longitude: body.longitude ? parseFloat(body.longitude) : null
   };
 };
 
@@ -75,6 +77,15 @@ const getSingleProperty = async (req, res) => {
       
     const images = await getPropertyImages(req.params.id);
     property.images = images;
+    
+    // Log the view
+    if (req.user && req.user.id !== property.uploaded_by) {
+      const db = require('../config/db');
+      await db.query(
+        'INSERT INTO property_views (property_id, viewer_id) VALUES ($1, $2)',
+        [property.id, req.user.id]
+      ).catch(e => console.error('Error logging view:', e));
+    }
     
     res.json({ property });
   } catch (err) {

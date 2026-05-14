@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://buyer-portal.com/sitemap.xml

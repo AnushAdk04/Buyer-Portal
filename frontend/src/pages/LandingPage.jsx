@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FiSearch, FiHome, FiTrendingUp, FiShield, FiArrowRight, FiHeart, FiMessageCircle } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import SEO from '../components/SEO';
 import { motion } from 'framer-motion';
 import axiosClient from '../api/axiosClient';
 
@@ -25,6 +26,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0f0f0f] font-sans">
+      <SEO title="Home" description="Find your dream home with Buyer Portal. Search properties, compare prices, and connect directly with sellers." />
       <Navbar />
 
       <main>

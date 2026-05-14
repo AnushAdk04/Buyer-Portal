@@ -11,7 +11,7 @@ const createInquiry = async (req, res) => {
       return res.status(400).json({ message: 'Property ID and message are required' });
     }
 
-    const property = await Property.findById(propertyId);
+    const property = await Property.getPropertyById(propertyId);
     if (!property) {
       return res.status(404).json({ message: 'Property not found' });
     }

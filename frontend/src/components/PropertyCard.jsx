@@ -1,7 +1,8 @@
-import { FaHeart, FaMapMarkerAlt, FaArrowRight, FaRupeeSign } from 'react-icons/fa';
-import { FiTrash2, FiEdit2 } from 'react-icons/fi';
+import { FaHeart, FaMapMarkerAlt, FaArrowRight, FaRupeeSign, FaEye } from 'react-icons/fa';
+import { FiTrash2, FiEdit2, FiMessageCircle } from 'react-icons/fi';
 import { IoBedOutline, IoWaterOutline } from 'react-icons/io5';
 import { TbRulerMeasure } from 'react-icons/tb';
+import { useCompare } from '../context/CompareContext';
 
 const TYPE_LABELS = {
   house: 'House',
@@ -37,11 +38,18 @@ const PropertyCard = ({
   onDelete,
   deleting,
 }) => {
+  const { compareItems, toggleCompare } = useCompare();
   const formatPrice = (price) =>
     new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
 
+  const getOptimizedUrl = (url) => {
+    if (!url || !url.includes('cloudinary.com')) return url;
+    return url.replace('/upload/', '/upload/f_auto,q_auto,w_400/');
+  };
+
   const statusKey = property.status || 'for_sale';
   const typeLabel = TYPE_LABELS[property.property_type] || 'Property';
+  const isCompared = compareItems.some((p) => p.id === property.id);
 
   return (
     <article
@@ -58,15 +66,23 @@ const PropertyCard = ({
     >
       <div className="relative overflow-hidden">
         <img
-          src={property.image_url}
+          src={getOptimizedUrl(property.image_url)}
           alt={property.title}
+          loading="lazy"
           className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => { e.target.src = 'https://placehold.co/400x200?text=No+Image'; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
 
+        {/* Most Viewed Badge */}
+        {Number(property.views_count) > 10 && (
+          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider bg-orange-500 shadow-md shadow-orange-500/20 z-10">
+            🔥 Popular
+          </span>
+        )}
+
         {/* Status badge */}
-        <span className={`absolute top-3 left-3 inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide ${STATUS_COLORS[statusKey]}`}>
+        <span className={`absolute top-3 ${Number(property.views_count) > 10 ? 'left-24' : 'left-3'} inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide ${STATUS_COLORS[statusKey]}`}>
           {STATUS_LABELS[statusKey]}
         </span>
 
@@ -126,8 +142,12 @@ const PropertyCard = ({
 
       <div className="p-4 space-y-3">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{typeLabel}</span>
+            <label className="flex items-center gap-1.5 cursor-pointer text-[10px] uppercase font-bold text-slate-500 hover:text-blue-600 transition-colors" onClick={(e) => e.stopPropagation()}>
+              <input type="checkbox" checked={isCompared} onChange={() => toggleCompare(property)} className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+              Compare
+            </label>
           </div>
           <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-[15px] leading-snug line-clamp-1 group-hover:text-blue-600 transition-colors">{property.title}</h3>
         </div>
@@ -166,6 +186,23 @@ const PropertyCard = ({
             <FaArrowRight className="text-[10px]" />
           </span>
         </div>
+
+        {canDelete && (property.views_count !== undefined) && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-2 text-center mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-2">
+            <div className="flex flex-col items-center">
+              <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold uppercase"><FaEye className="text-slate-400" /> Views</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.views_count || 0}</span>
+            </div>
+            <div className="flex flex-col items-center border-l border-r border-slate-200 dark:border-slate-700">
+              <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold uppercase"><FaHeart className="text-slate-400" /> Favs</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.favourites_count || 0}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold uppercase"><FiMessageCircle className="text-slate-400" /> Inquiries</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.inquiries_count || 0}</span>
+            </div>
+          </div>
+        )}
       </div>
     </article>
   );

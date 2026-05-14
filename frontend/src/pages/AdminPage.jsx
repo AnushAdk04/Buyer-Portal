@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiUsers, FiHome, FiHeart, FiTrendingUp, FiTrash2, FiEdit3 } from 'react-icons/fi';
+import { 
+  FiUsers, FiHome, FiHeart, FiTrendingUp, FiTrash2, FiEdit3, 
+  FiBarChart2, FiActivity, FiSettings, FiSearch, FiFilter,
+  FiChevronRight, FiGrid, FiList, FiPieChart
+} from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import axiosClient from '../api/axiosClient';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell
@@ -20,9 +25,11 @@ const AdminPage = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [allProperties, setAllProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedUser, setSelectedUser] = useState(null);
   const [userRoleForm, setUserRoleForm] = useState({ userId: null, newRole: 'buyer' });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Chart colors matching theme
   const chartColors = ['#2563eb', '#7c3aed', '#ec4899', '#f59e0b', '#10b981'];
@@ -126,379 +133,374 @@ const AdminPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950">
+      <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a]">
         <Navbar />
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-xl text-slate-600 dark:text-slate-400">Loading admin dashboard...</div>
+        <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );
   }
 
+  const filteredUsers = allUsers.filter(u => 
+    u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredProperties = allProperties.filter(p => 
+    p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    p.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-slate-100 font-sans">
       <Navbar />
-      <div className="p-6 max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">Admin Dashboard</h1>
-          <p className="text-slate-600 dark:text-slate-400">Platform overview and management</p>
-        </div>
-
-        {/* Top Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Total Users Card */}
-            <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} hover:shadow-lg transition-shadow`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Users</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{stats.users?.total_users ?? 0}</p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{stats.users?.new_users_this_week ?? 0} new this week</p>
-                </div>
-                <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                  <FiUsers className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Properties Card */}
-            <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} hover:shadow-lg transition-shadow`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Properties</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{stats.properties?.total_properties ?? 0}</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{stats.properties?.new_properties_this_week ?? 0} new this week</p>
-                </div>
-                <div className="p-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                  <FiHome className="w-6 h-6 text-emerald-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Favourites Card */}
-            <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} hover:shadow-lg transition-shadow`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Total Favourites</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{stats.favourites?.total_favourites ?? 0}</p>
-                  <p className="text-xs text-rose-600 dark:text-rose-400 mt-1">Engagement metric</p>
-                </div>
-                <div className="p-4 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-                  <FiHeart className="w-6 h-6 text-rose-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Avg Price Card */}
-            <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} hover:shadow-lg transition-shadow`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">Average Price</p>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">₹{Number(stats.properties?.avg_price || 0) > 0 ? (Number(stats.properties.avg_price) / 1000000).toFixed(1) : '0.0'}M</p>
-                  <p className="text-xs text-violet-600 dark:text-violet-400 mt-1">Market average</p>
-                </div>
-                <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-lg">
-                  <FiTrendingUp className="w-6 h-6 text-violet-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* User Growth Line Chart */}
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg}`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">User Growth (30 Days)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={userGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                <XAxis dataKey="date" stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <YAxis stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={2} dot={{ fill: '#2563eb', r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Property Growth Bar Chart */}
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg}`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Property Growth (30 Days)</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={propertyGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                <XAxis dataKey="date" stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <YAxis stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                <Bar dataKey="count" fill="#10b981" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Price Distribution Pie Chart */}
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg}`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Price Distribution</h3>
-            {normalizedPriceDistribution.some((item) => item.count > 0) ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={normalizedPriceDistribution}
-                    dataKey="count"
-                    nameKey="range"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {normalizedPriceDistribution.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-sm text-slate-500 dark:text-slate-400">
-                No price data available yet.
-              </div>
-            )}
-          </div>
-
-          {/* Property Volume Area Chart */}
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg}`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Cumulative Properties</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={propertyGrowth}>
-                <defs>
-                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" className="dark:stroke-slate-700" />
-                <XAxis dataKey="date" stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <YAxis stroke="#94a3b8" className="dark:stroke-slate-600" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
-                <Area type="monotone" dataKey="count" stroke="#7c3aed" fillOpacity={1} fill="url(#colorCount)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Top Favourited Properties */}
-        {topFavourited.length > 0 && (
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} mb-8`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Favourited Properties</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-slate-700">
-                    <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Title</th>
-                    <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Location</th>
-                    <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Price</th>
-                    <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Favourites</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topFavourited.map((prop) => (
-                    <tr key={prop.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50">
-                      <td className="py-3 px-4 text-slate-900 dark:text-white">{prop.title}</td>
-                      <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{prop.location}</td>
-                      <td className="py-3 px-4 text-slate-900 dark:text-white">₹{(prop.price / 1000000).toFixed(1)}M</td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded-full text-xs font-medium">
-                          <FiHeart className="w-3 h-3" /> {prop.favourite_count}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Activity */}
-        {recentActivity.length > 0 && (
-          <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} mb-8`}>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Recent Activity</h3>
-            <div className="space-y-3">
-              {recentActivity.map((activity, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-3 rounded-lg bg-slate-100 dark:bg-slate-900/30">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                    {activity.type === 'user_joined' ? <FiUsers className="w-5 h-5 text-blue-600" /> : <FiHome className="w-5 h-5 text-blue-600" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{activity.subtitle}</p>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-500">{new Date(activity.created_at).toLocaleDateString()}</p>
-                </div>
+      
+      <div className="flex max-w-[1600px] mx-auto min-h-[calc(100vh-73px)]">
+        {/* Sidebar */}
+        <aside className="hidden lg:flex w-72 flex-col border-r border-slate-200 dark:border-slate-800 p-6 bg-white/50 dark:bg-[#0a0a0a]/50 backdrop-blur-sm">
+          <div className="mb-10">
+            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Management</h2>
+            <nav className="space-y-2">
+              {[
+                { id: 'overview', label: 'Overview', icon: <FiBarChart2 /> },
+                { id: 'users', label: 'Users', icon: <FiUsers /> },
+                { id: 'properties', label: 'Properties', icon: <FiHome /> },
+                { id: 'activity', label: 'Activity', icon: <FiActivity /> },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                    activeTab === item.id 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  {item.label}
+                </button>
               ))}
+            </nav>
+          </div>
+          
+          <div className="mt-auto p-4 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
+            <p className="text-xs font-medium opacity-80 mb-1">System Status</p>
+            <p className="text-lg font-bold mb-3">All systems operational</p>
+            <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="w-full h-full bg-white rounded-full" />
             </div>
           </div>
-        )}
+        </aside>
 
-        {/* Users Management */}
-        <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg} mb-8`}>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Users Management</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Name</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Email</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Role</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Properties</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Favourites</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50">
-                    <td className="py-3 px-4 text-slate-900 dark:text-white font-medium">{user.name}</td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{user.email}</td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-900 dark:text-white">{user.property_count}</td>
-                    <td className="py-3 px-4 text-slate-900 dark:text-white">{user.favourite_count}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {userRoleForm.userId === user.id ? (
-                          <div className="flex gap-2">
-                            <select
-                              value={userRoleForm.newRole}
-                              onChange={(e) => setUserRoleForm({ ...userRoleForm, newRole: e.target.value })}
-                              className="px-2 py-1 text-xs rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                            >
-                              <option value="buyer">Buyer</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                            <button
-                              onClick={() => handleUpdateUserRole(user.id, userRoleForm.newRole)}
-                              className="px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-                            >
-                              Save
-                            </button>
-                            <button
-                              onClick={() => setUserRoleForm({ userId: null, newRole: 'buyer' })}
-                              className="px-2 py-1 text-xs bg-slate-400 text-white rounded hover:bg-slate-500 transition-colors"
-                            >
-                              Cancel
-                            </button>
+        {/* Main Content */}
+        <main className="flex-1 p-6 lg:p-10 overflow-hidden">
+          {/* Header */}
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
+            <div>
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-3xl lg:text-4xl font-black font-heading text-slate-900 dark:text-white tracking-tight"
+              >
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+              </motion.h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">Control center for BuyerPortal platform</p>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 transition-all"
+                />
+              </div>
+              <button className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <FiSettings className="text-xl" />
+              </button>
+            </div>
+          </header>
+
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' && (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+                  <StatCard label="Total Users" value={stats.users?.total_users} subValue={`${stats.users?.new_users_this_week} new this week`} icon={<FiUsers />} color="blue" />
+                  <StatCard label="Total Properties" value={stats.properties?.total_properties} subValue={`${stats.properties?.new_properties_this_week} new this week`} icon={<FiHome />} color="emerald" />
+                  <StatCard label="Favourites" value={stats.favourites?.total_favourites} subValue="User engagement" icon={<FiHeart />} color="rose" />
+                  <StatCard label="Avg Price" value={`₹${(Number(stats.properties?.avg_price || 0) / 1000000).toFixed(1)}M`} subValue="Market average" icon={<FiTrendingUp />} color="violet" />
+                </div>
+
+                {/* Charts Area */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                  <ChartContainer title="User Growth (30 Days)" icon={<FiActivity />}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={userGrowth}>
+                        <defs>
+                          <linearGradient id="userGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="date" hide />
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                        <Area type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} fill="url(#userGrad)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+
+                  <ChartContainer title="Property Volume" icon={<FiHome />}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={propertyGrowth}>
+                        <XAxis dataKey="date" hide />
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                        <Bar dataKey="count" fill="#10b981" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+
+                  <ChartContainer title="Price Distribution" icon={<FiPieChart />}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie data={normalizedPriceDistribution} dataKey="count" nameKey="range" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5}>
+                          {normalizedPriceDistribution.map((_, i) => <Cell key={i} fill={chartColors[i % chartColors.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                        <Legend verticalAlign="bottom" height={36}/>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+
+                  <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                      <FiHeart className="text-rose-500" /> Hot Properties
+                    </h3>
+                    <div className="space-y-4">
+                      {topFavourited.slice(0, 5).map(prop => (
+                        <div key={prop.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                          <div>
+                            <p className="font-bold text-sm text-slate-900 dark:text-white">{prop.title}</p>
+                            <p className="text-xs text-slate-500">{prop.location}</p>
                           </div>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => setUserRoleForm({ userId: user.id, newRole: user.role })}
-                              className="p-1 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded transition-colors"
-                              title="Edit role"
-                            >
-                              <FiEdit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => setDeleteConfirm({ type: 'user', id: user.id, name: user.name })}
-                              className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
-                              title="Delete user"
-                            >
-                              <FiTrash2 className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                          <div className="text-right">
+                            <p className="font-bold text-sm text-blue-600">₹{(prop.price / 1000000).toFixed(1)}M</p>
+                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{prop.favourite_count} saves</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-        {/* Properties Management */}
-        <div className={`p-6 rounded-xl border ${lightBorder} ${lightCardBg}`}>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Properties Management</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Title</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Location</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Price</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Uploader</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Favourites</th>
-                  <th className="text-left py-3 px-4 text-slate-600 dark:text-slate-400 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {allProperties.map((prop) => (
-                  <tr key={prop.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50">
-                    <td className="py-3 px-4 text-slate-900 dark:text-white font-medium">{prop.title}</td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{prop.location}</td>
-                    <td className="py-3 px-4 text-slate-900 dark:text-white">₹{(prop.price / 1000000).toFixed(1)}M</td>
-                    <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{prop.uploaded_by_name || 'Unknown'}</td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded-full text-xs font-medium">
-                        <FiHeart className="w-3 h-3" /> {prop.favourite_count}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => setDeleteConfirm({ type: 'property', id: prop.id, name: prop.title })}
-                        className="p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
-                        title="Delete property"
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
+            {activeTab === 'users' && (
+              <motion.div
+                key="users"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/50">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">User</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Role</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-center">Properties</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-center">Favourites</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {filteredUsers.map(user => (
+                        <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 font-bold">
+                                {user.name.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900 dark:text-white">{user.name}</p>
+                                <p className="text-xs text-slate-500">{user.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                              user.role === 'admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                            }`}>
+                              {user.role}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center font-bold text-slate-600 dark:text-slate-400">{user.property_count}</td>
+                          <td className="px-6 py-4 text-center font-bold text-slate-600 dark:text-slate-400">{user.favourite_count}</td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {userRoleForm.userId === user.id ? (
+                                <div className="flex gap-1 animate-in fade-in slide-in-from-right-2">
+                                  <select value={userRoleForm.newRole} onChange={(e) => setUserRoleForm({ ...userRoleForm, newRole: e.target.value })}
+                                    className="px-2 py-1 text-xs rounded-lg border dark:bg-slate-800 dark:border-slate-700 outline-none">
+                                    <option value="buyer">Buyer</option>
+                                    <option value="admin">Admin</option>
+                                  </select>
+                                  <button onClick={() => handleUpdateUserRole(user.id, userRoleForm.newRole)} className="p-1.5 bg-emerald-600 text-white rounded-lg"><FiActivity /></button>
+                                  <button onClick={() => setUserRoleForm({ userId: null, newRole: 'buyer' })} className="p-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg text-slate-600 dark:text-white">×</button>
+                                </div>
+                              ) : (
+                                <>
+                                  <button onClick={() => setUserRoleForm({ userId: user.id, newRole: user.role })} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-xl transition-all" title="Edit Role"><FiEdit3 /></button>
+                                  <button onClick={() => setDeleteConfirm({ type: 'user', id: user.id, name: user.name })} className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all" title="Delete User"><FiTrash2 /></button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'properties' && (
+              <motion.div
+                key="properties"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-800/50">
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Property</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Location</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Price</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Seller</th>
+                        <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {filteredProperties.map(prop => (
+                        <tr key={prop.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <img src={prop.image_url} alt="" className="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-800" />
+                              <p className="font-bold text-slate-900 dark:text-white max-w-[200px] truncate">{prop.title}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-500">{prop.location}</td>
+                          <td className="px-6 py-4 font-bold text-blue-600">₹{(prop.price / 1000000).toFixed(1)}M</td>
+                          <td className="px-6 py-4">
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">{prop.uploaded_by_name || 'System'}</p>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button onClick={() => setDeleteConfirm({ type: 'property', id: prop.id, name: prop.title })} className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all" title="Delete Property"><FiTrash2 /></button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'activity' && (
+              <motion.div
+                key="activity"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="max-w-3xl mx-auto space-y-4"
+              >
+                {recentActivity.map((activity, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:border-blue-500/30 transition-all group">
+                    <div className={`p-3 rounded-xl ${activity.type === 'user_joined' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30'} group-hover:scale-110 transition-transform`}>
+                      {activity.type === 'user_joined' ? <FiUsers /> : <FiHome />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="font-bold text-slate-900 dark:text-white truncate">{activity.title}</p>
+                        <span className="shrink-0 text-[10px] font-bold text-slate-400 uppercase tracking-widest">{new Date(activity.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{activity.subtitle}</p>
+                    </div>
+                    <FiChevronRight className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className={`bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-sm w-full p-6 border ${lightBorder}`}>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Confirm Delete</p>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-              Delete {deleteConfirm.type === 'user' ? 'User' : 'Property'}?
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (deleteConfirm.type === 'user') {
-                    handleDeleteUser(deleteConfirm.id);
-                  } else {
-                    handleDeleteProperty(deleteConfirm.id);
-                  }
-                }}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-medium"
-              >
-                Delete
-              </button>
-            </div>
+      {/* Delete Modal */}
+      <AnimatePresence>
+        {deleteConfirm && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-200 dark:border-slate-800">
+              <div className="w-16 h-16 bg-rose-100 dark:bg-rose-900/30 text-rose-600 rounded-2xl flex items-center justify-center text-3xl mb-6 mx-auto">
+                <FiTrash2 />
+              </div>
+              <h3 className="text-2xl font-bold text-center mb-2">Are you sure?</h3>
+              <p className="text-slate-500 text-center mb-8 text-sm">Deleting <span className="text-slate-900 dark:text-white font-bold">{deleteConfirm.name}</span> is permanent and cannot be undone.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-800 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+                <button onClick={() => { deleteConfirm.type === 'user' ? handleDeleteUser(deleteConfirm.id) : handleDeleteProperty(deleteConfirm.id); }} className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700 transition-colors shadow-lg shadow-rose-600/20">Delete</button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
+// Helper Components
+const StatCard = ({ label, value, subValue, icon, color }) => {
+  const colors = {
+    blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+    emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+    rose: 'bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
+    violet: 'bg-violet-50 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
+  };
+  
+  return (
+    <motion.div whileHover={{ y: -5 }} className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+      <div className="flex items-center justify-between mb-4">
+        <span className={`p-3 rounded-2xl ${colors[color]}`}>{icon}</span>
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-3xl font-black tracking-tight">{value || 0}</p>
+      <p className="text-xs text-slate-500 mt-1">{subValue}</p>
+    </motion.div>
+  );
+};
+
+const ChartContainer = ({ title, icon, children }) => (
+  <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+    <div className="flex items-center gap-2 mb-6 text-slate-900 dark:text-white font-bold">
+      <span className="text-blue-600">{icon}</span>
+      <h3>{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
 export default AdminPage;
+

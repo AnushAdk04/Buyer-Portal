@@ -147,4 +147,26 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, getPublicProfile, editProfile, changeAvatar, removeAvatar, changePassword, getDashboardStats };
+const getAnalytics = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const db = require('../config/db');
+
+    // Get views per day for the last 7 days for properties owned by user
+    const { rows } = await db.query(`
+      SELECT DATE(pv.viewed_at) as date, COUNT(*) as views
+      FROM property_views pv
+      JOIN properties p ON pv.property_id = p.id
+      WHERE p.uploaded_by = $1 AND pv.viewed_at >= CURRENT_DATE - INTERVAL '7 days'
+      GROUP BY DATE(pv.viewed_at)
+      ORDER BY DATE(pv.viewed_at) ASC
+    `, [userId]);
+
+    res.json({ viewsOverTime: rows });
+  } catch (err) {
+    console.error('Get analytics error:', err);
+    res.status(500).json({ message: 'Could not fetch analytics' });
+  }
+};
+
+module.exports = { getProfile, getPublicProfile, editProfile, changeAvatar, removeAvatar, changePassword, getDashboardStats, getAnalytics };

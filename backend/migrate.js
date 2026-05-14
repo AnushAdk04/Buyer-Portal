@@ -14,6 +14,8 @@ async function migrate() {
       ALTER TABLE properties ADD COLUMN IF NOT EXISTS year_built INT;
       ALTER TABLE properties ADD COLUMN IF NOT EXISTS parking_spaces INT DEFAULT 0;
       ALTER TABLE properties ADD COLUMN IF NOT EXISTS is_featured BOOLEAN DEFAULT false;
+      ALTER TABLE properties ADD COLUMN IF NOT EXISTS latitude DECIMAL(10,8);
+      ALTER TABLE properties ADD COLUMN IF NOT EXISTS longitude DECIMAL(11,8);
     `);
 
     await db.query(`
@@ -54,6 +56,15 @@ async function migrate() {
         link VARCHAR(500),
         is_read BOOLEAN DEFAULT false,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS property_views (
+        id SERIAL PRIMARY KEY,
+        property_id INT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+        viewer_id INT REFERENCES users(id) ON DELETE SET NULL,
+        viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 

@@ -12,6 +12,9 @@ import { FaHeart, FaMapMarkerAlt, FaRupeeSign } from 'react-icons/fa';
 import { IoBedOutline, IoWaterOutline, IoCarOutline } from 'react-icons/io5';
 import { TbRulerMeasure } from 'react-icons/tb';
 import { FiArrowLeft, FiEdit2, FiExternalLink, FiTrash2, FiChevronLeft, FiChevronRight, FiCalendar, FiMessageCircle, FiShare2 } from 'react-icons/fi';
+import MapComponent from '../components/MapComponent';
+import EmiCalculator from '../components/EmiCalculator';
+import SEO from '../components/SEO';
 
 const STATUS_LABELS = { for_sale: 'For Sale', for_rent: 'For Rent', sold: 'Sold', under_contract: 'Under Contract' };
 const STATUS_COLORS = { for_sale: 'bg-emerald-500', for_rent: 'bg-blue-500', sold: 'bg-red-500', under_contract: 'bg-amber-500' };
@@ -35,9 +38,15 @@ const PropertyDetailsPage = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [isReadMore, setIsReadMore] = useState(false);
 
   const isOwner = Number(property?.uploaded_by) === Number(user?.id);
   const formatPrice = (price) => new Intl.NumberFormat('en-NP', { style: 'currency', currency: 'NPR', maximumFractionDigits: 0 }).format(price);
+
+  const getOptimizedUrl = (url, width) => {
+    if (!url || !url.includes('cloudinary.com')) return url;
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+  };
 
   useEffect(() => {
     const loadProperty = async () => {
@@ -58,6 +67,20 @@ const PropertyDetailsPage = () => {
           found.images.forEach(img => allImages.push(img.image_url));
         }
         setImages(allImages);
+
+        // Save to recently viewed
+        const recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+        const updatedRecent = [{
+          id: found.id,
+          title: found.title,
+          price: found.price,
+          image_url: found.image_url,
+          location: found.location,
+          status: found.status,
+          property_type: found.property_type,
+          viewedAt: new Date().toISOString()
+        }, ...recent.filter(p => p.id !== found.id)].slice(0, 20);
+        localStorage.setItem('recentlyViewed', JSON.stringify(updatedRecent));
       } catch { toast.error('Failed to load property'); navigate('/dashboard', { replace: true }); }
       finally { setLoading(false); }
     };
@@ -160,6 +183,27 @@ const PropertyDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0f0f0f]">
+      {property && (
+        <SEO 
+          title={property.title} 
+          description={property.description?.substring(0, 160) || `View details for ${property.title}`} 
+          image={property.image_url} 
+          schema={{
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": property.title,
+            "image": property.image_url,
+            "description": property.description,
+            "offers": {
+              "@type": "Offer",
+              "url": window.location.href,
+              "priceCurrency": "NPR",
+              "price": property.price,
+              "availability": property.status === 'for_sale' ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+            }
+          }}
+        />
+      )}
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <button onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors mb-6">
@@ -175,7 +219,7 @@ const PropertyDetailsPage = () => {
             {/* Left — Image Gallery */}
             <section>
               <div className="relative overflow-hidden rounded-2xl bg-slate-900 group">
-                <img src={images[activeImg] || property.image_url} alt={property.title} className="w-full h-[360px] sm:h-[480px] object-cover transition-transform duration-500"
+                <img src={getOptimizedUrl(images[activeImg] || property.image_url, 1200)} alt={property.title} className="w-full h-[360px] sm:h-[480px] object-cover transition-transform duration-500"
                   onError={(e) => { e.target.src = 'https://placehold.co/1200x800?text=No+Image'; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
@@ -208,11 +252,23 @@ const PropertyDetailsPage = () => {
                 <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                   {images.map((url, i) => (
                     <button key={i} onClick={() => setActiveImg(i)} className={`flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === activeImg ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-transparent opacity-60 hover:opacity-100'}`}>
-                      <img src={url} alt="" className="w-full h-full object-cover" />
+                      <img src={getOptimizedUrl(url, 400)} alt="" loading="lazy" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
+              
+              {property.latitude && property.longitude && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold font-heading text-slate-900 dark:text-white mb-4">Location Map</h3>
+                  <div className="h-[300px] sm:h-[400px]">
+                    <MapComponent properties={[property]} singleMode={true} />
+                  </div>
+                </div>
+              )}
+
+              {/* EMI Calculator */}
+              <EmiCalculator propertyPrice={property.price} />
             </section>
 
             {/* Right — Details */}
@@ -289,11 +345,16 @@ const PropertyDetailsPage = () => {
               )}
 
               {/* Description */}
-              <div>
+              <div className="mb-6">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Description</h3>
-                <p className="text-slate-600 dark:text-slate-300 leading-7 text-sm whitespace-pre-line">
+                <p className={`text-slate-600 dark:text-slate-300 leading-7 text-sm whitespace-pre-line ${!isReadMore && property.description?.length > 150 ? 'line-clamp-4' : ''}`}>
                   {property.description || 'No description provided.'}
                 </p>
+                {property.description?.length > 150 && (
+                  <button onClick={() => setIsReadMore(!isReadMore)} className="text-blue-600 dark:text-blue-400 text-sm font-medium mt-2 hover:underline">
+                    {isReadMore ? 'Read less' : 'Read more'}
+                  </button>
+                )}
               </div>
             </aside>
           </motion.div>

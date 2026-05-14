@@ -10,10 +10,15 @@ import Pagination from '../components/Pagination';
 import UploadPropertyModal from '../components/UploadPropertyModal';
 import ConfirmDialog from '../components/ConfirmDialog';
 import EditPropertyModal from '../components/EditPropertyModal';
+import AnalyticsModal from '../components/AnalyticsModal';
+import CompareBar from '../components/CompareBar';
+import RecentlyViewed from '../components/RecentlyViewed';
+import SEO from '../components/SEO';
 import toast from 'react-hot-toast';
-import { FiUploadCloud, FiSearch, FiFilter, FiGrid, FiList, FiX } from 'react-icons/fi';
+import { FiUploadCloud, FiSearch, FiFilter, FiGrid, FiList, FiX, FiMap, FiTrendingUp } from 'react-icons/fi';
+import MapComponent from '../components/MapComponent';
 
-const EMPTY_FORM = { title: '', location: '', price: '', description: '', propertyType: 'house', status: 'for_sale', bedrooms: '', bathrooms: '', areaSqft: '', parkingSpaces: '' };
+const EMPTY_FORM = { title: '', location: '', price: '', description: '', propertyType: 'house', status: 'for_sale', bedrooms: '', bathrooms: '', areaSqft: '', parkingSpaces: '', latitude: '', longitude: '' };
 const EMPTY_FILTERS = { type: '', status: '', minPrice: '', maxPrice: '', bedrooms: '', bathrooms: '', minArea: '', sort: 'newest' };
 
 const DashboardPage = () => {
@@ -57,6 +62,7 @@ const DashboardPage = () => {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({ ...EMPTY_FORM });
   const [editImageFiles, setEditImageFiles] = useState([]);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
   // Sync filters to URL
   useEffect(() => {
@@ -185,7 +191,7 @@ const DashboardPage = () => {
 
   const handleOpenEdit = (property) => {
     setEditingPropertyId(property.id); setEditImageFiles([]);
-    setEditForm({ title: property.title || '', location: property.location || '', price: property.price ?? '', description: property.description || '', propertyType: property.property_type || 'house', status: property.status || 'for_sale', bedrooms: property.bedrooms || '', bathrooms: property.bathrooms || '', areaSqft: property.area_sqft || '', parkingSpaces: property.parking_spaces || '' });
+    setEditForm({ title: property.title || '', location: property.location || '', price: property.price ?? '', description: property.description || '', propertyType: property.property_type || 'house', status: property.status || 'for_sale', bedrooms: property.bedrooms || '', bathrooms: property.bathrooms || '', areaSqft: property.area_sqft || '', parkingSpaces: property.parking_spaces || '', latitude: property.latitude || '', longitude: property.longitude || '' });
     setIsEditOpen(true);
   };
 
@@ -224,12 +230,18 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0f0f0f]">
+      <SEO title="Dashboard" description="Manage your properties, saved listings, and inquiries." />
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {/* Hero */}
         <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-[#121212] dark:via-[#171717] dark:to-[#121212] rounded-3xl px-6 sm:px-8 py-7 mb-8 text-white flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between border border-slate-800">
           <div>
-            <p className="text-blue-300 text-sm uppercase tracking-[0.24em] font-semibold mb-2">Property Dashboard</p>
+            <div className="flex items-center gap-3 mb-2">
+              <p className="text-blue-300 text-sm uppercase tracking-[0.24em] font-semibold">Property Dashboard</p>
+              <button onClick={() => setIsAnalyticsOpen(true)} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold uppercase tracking-wider hover:bg-blue-500/30 transition-colors border border-blue-500/30">
+                <FiTrendingUp className="text-sm" /> View Analytics
+              </button>
+            </div>
             <h2 className="text-2xl md:text-3xl font-bold font-heading mb-2">Welcome back, {user?.name}</h2>
             <p className="text-slate-300 text-sm max-w-2xl">Search, filter, and discover properties. Manage your listings and favourites.</p>
           </div>
@@ -251,6 +263,7 @@ const DashboardPage = () => {
           <div className="relative flex-1">
             <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input type="text" placeholder="Search by title, location..." value={searchText} onChange={(e) => setSearchText(e.target.value)}
+              aria-label="Search properties"
               className="w-full pl-10 pr-4 py-3 border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#151515] text-slate-800 dark:text-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             {searchText && <button onClick={() => setSearchText('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><FiX /></button>}
           </div>
@@ -259,8 +272,9 @@ const DashboardPage = () => {
               <FiFilter /> Filters
             </button>
             <div className="hidden sm:flex items-center border border-slate-300 dark:border-slate-700 rounded-xl overflow-hidden">
-              <button onClick={() => setViewMode('grid')} className={`p-2.5 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#151515] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><FiGrid /></button>
-              <button onClick={() => setViewMode('list')} className={`p-2.5 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#151515] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><FiList /></button>
+              <button onClick={() => setViewMode('grid')} aria-label="Grid view" className={`p-2.5 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#151515] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><FiGrid /></button>
+              <button onClick={() => setViewMode('list')} aria-label="List view" className={`p-2.5 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#151515] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><FiList /></button>
+              <button onClick={() => setViewMode('map')} aria-label="Map view" className={`p-2.5 ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-[#151515] text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><FiMap /></button>
             </div>
             <button onClick={() => setIsUploadOpen(true)} className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
               <FiUploadCloud /> Upload
@@ -302,6 +316,11 @@ const DashboardPage = () => {
           </p>
         )}
 
+        {/* Recently Viewed */}
+        {activeTab === 'all' && searchText === '' && activeFilterChips.length === 0 && (
+          <RecentlyViewed />
+        )}
+
         {/* Main content with sidebar */}
         <div className="flex gap-6">
           <FilterSidebar filters={filters} onChange={setFilters} onClear={clearFilters} isOpen={filterOpen} onClose={() => setFilterOpen(false)} />
@@ -317,6 +336,10 @@ const DashboardPage = () => {
                 {activeTab === 'all' && activeFilterChips.length > 0 && (
                   <button onClick={clearFilters} className="mt-4 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">Clear Filters</button>
                 )}
+              </div>
+            ) : viewMode === 'map' ? (
+              <div className="h-[600px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+                <MapComponent properties={displayed} />
               </div>
             ) : (
               <div className={gridCols}>
@@ -334,6 +357,8 @@ const DashboardPage = () => {
         <UploadPropertyModal isOpen={isUploadOpen} onClose={() => { if (!uploading) setIsUploadOpen(false); }} form={form} onFormChange={handleFormChange} onImageChange={setImageFiles} onSubmit={handleUploadProperty} uploading={uploading} imageFiles={imageFiles} />
         <ConfirmDialog isOpen={Boolean(pendingDeleteId)} title="Delete Property" message="Are you sure? This cannot be undone." confirmText="Delete" cancelText="Cancel" onConfirm={handleConfirmDelete} onCancel={() => { if (!deleteLoading) setPendingDeleteId(null); }} loading={deleteLoading === pendingDeleteId} />
         <EditPropertyModal isOpen={isEditOpen} onClose={() => { if (!editing) { setIsEditOpen(false); setEditingPropertyId(null); setEditImageFiles([]); } }} form={editForm} onFormChange={handleEditFormChange} onImageChange={setEditImageFiles} onSubmit={handleSaveEdit} saving={editing} imageFiles={editImageFiles} />
+        <AnalyticsModal isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
+        <CompareBar />
       </main>
     </div>
   );
