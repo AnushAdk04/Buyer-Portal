@@ -50,3 +50,13 @@ Base URL: `http://localhost:5000/api`
 | `/notifications` | `GET` | Get user notifications |
 | `/notifications/:id/read` | `PUT` | Mark notification as read |
 | `/notifications/read-all` | `PUT` | Mark all notifications as read |
+ 
+ ## AI Assistant
+ 
+ | Endpoint | Method | Description |
+ | :--- | :--- | :--- |
+ | `/ai/chat` | `POST` | Chat with Gemini AI (Real Estate Assistant) |
+ 
+ ---
+ *Last Updated: May 15, 2026*
+

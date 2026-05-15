@@ -31,6 +31,7 @@
 - **Favourites System**: Save properties to a personal wishlist.
 - **Property Comparison**: Side-by-side comparison of up to 3 properties in a dedicated view.
 - **Recently Viewed**: Persistent history tracking for quickly returning to browsed properties.
+- **AI Chatbot Assistant**: Specialized real estate expert powered by GPT-4o-mini to help with property searches, advice, and portal navigation.
 - **EMI Calculator**: Interactive mortgage calculator with principal vs interest visualization.
 - **Inquiry System**: Direct communication between buyers and sellers via integrated contact forms.
 - **Real-Time Notifications**: Instant alerts for inquiries, property updates, and account actions.
@@ -60,7 +61,7 @@ The following features are ideas for future versions of the platform:
 - **Virtual Tours**: Support for 360° image viewing or video walkthroughs.
 - **Multi-Language Support**: Integration of Nepali and other local languages.
 - **PWA Support**: Transform the portal into a Progressive Web App for offline access and home-screen install.
-- **AI Chatbot**: Intelligent assistant to help users find properties based on natural language.
+
 
 ---
 *For technical implementation details, refer to the [API Documentation](./backend/API_DOCS.md).*

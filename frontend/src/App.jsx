@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { CompareProvider } from './context/CompareContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIChatbot from './components/AIChatbot';
 
 // Lazy loaded components
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -116,6 +117,7 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
+            <AIChatbot />
             </ErrorBoundary>
           </BrowserRouter>
         </CompareProvider>
