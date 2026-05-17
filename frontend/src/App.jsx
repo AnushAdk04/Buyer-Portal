@@ -25,6 +25,8 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 const NotAdminPage = lazy(() => import('./pages/NotAdminPage'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage'));
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage'));
+const PaymentFailurePage = lazy(() => import('./pages/PaymentFailurePage'));
 
 // Fallback Loader
 const PageLoader = () => (
@@ -95,6 +97,22 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <InquiriesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payment/success"
+                  element={
+                    <ProtectedRoute>
+                      <PaymentSuccessPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payment/failure"
+                  element={
+                    <ProtectedRoute>
+                      <PaymentFailurePage />
                     </ProtectedRoute>
                   }
                 />

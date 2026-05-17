@@ -57,6 +57,13 @@ Base URL: `http://localhost:5000/api`
  | :--- | :--- | :--- |
  | `/ai/chat` | `POST` | Chat with Gemini AI (Real Estate Assistant) |
  
+ ## Payments & Promoted Listings (eSewa)
+ 
+ | Endpoint | Method | Description |
+ | :--- | :--- | :--- |
+ | `/payments/initiate-esewa` | `POST` | Request staging promotion parameter block and HMAC-SHA256 signature |
+ | `/payments/verify-esewa` | `POST` | Decodes Base64 redirect payloads and verifies cryptographic signatures |
+ 
  ---
- *Last Updated: May 15, 2026*
+ *Last Updated: May 17, 2026*
 

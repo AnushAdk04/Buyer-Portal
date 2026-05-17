@@ -14,6 +14,12 @@
 - **Password Management**: Secure password hashing and integrated "Forgot Password" flow with email recovery.
 - **Protected Routes**: Navigation guards to prevent unauthorized access to private dashboards.
 
+### 💳 Staging Promotions & Nepali Payment Gateways
+- **Multiple Payment Gateways**: Ready-to-go integration of leading local payment portals starting with **eSewa ePay API v2** staging environment.
+- **Cryptographic Verification**: Secure, tamper-proof server-side transaction verification utilizing **HMAC-SHA256** and **Base64** encoding.
+- **Premium Featured Listings**: Toggles a listing as "Featured" upon successful payment of **₨ 500.00**.
+- **Audit Ledger**: A dedicated transaction history tracking table `payments` in the database to record transaction codes and payment states.
+
 ### 🏠 Property Management
 - **Rich Listings**: Support for detailed property specs including title, location, price, description, type (House, Apartment, etc.), status (For Sale, Rent, Sold), bedrooms, bathrooms, and area.
 - **Multi-Image Support**: Upload up to 10 high-resolution images per property with Cloudinary integration.

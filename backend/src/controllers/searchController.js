@@ -130,7 +130,7 @@ const searchProperties = async (req, res) => {
       FROM properties p
       LEFT JOIN users u ON p.uploaded_by = u.id
       ${whereClause}
-      ORDER BY ${orderBy}
+      ORDER BY p.is_featured DESC, ${orderBy}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     const { rows: properties } = await db.query(dataQuery, [...values, limitNum, offset]);

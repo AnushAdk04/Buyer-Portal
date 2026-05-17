@@ -68,6 +68,21 @@ async function migrate() {
       );
     `);
 
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        property_id INT REFERENCES properties(id) ON DELETE SET NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        transaction_uuid VARCHAR(100) UNIQUE NOT NULL,
+        transaction_code VARCHAR(100),
+        gateway VARCHAR(20) DEFAULT 'esewa',
+        status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETE', 'FAILED', 'CANCELED')),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('Migration completed successfully.');
     process.exit(0);
   } catch (err) {

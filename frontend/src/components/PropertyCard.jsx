@@ -37,6 +37,8 @@ const PropertyCard = ({
   onEdit,
   onDelete,
   deleting,
+  onFeature,
+  isFeatureLoading,
 }) => {
   const { compareItems, toggleCompare } = useCompare();
   const formatPrice = (price) =>
@@ -50,6 +52,22 @@ const PropertyCard = ({
   const statusKey = property.status || 'for_sale';
   const typeLabel = TYPE_LABELS[property.property_type] || 'Property';
   const isCompared = compareItems.some((p) => p.id === property.id);
+
+  // Dynamic badge positioning logic to avoid overlapping
+  const hasFeatured = !!property.is_featured;
+  const hasPopular = Number(property.views_count) > 10;
+
+  let popularLeft = 'left-3';
+  if (hasFeatured) {
+    popularLeft = 'left-[98px]';
+  }
+
+  let statusLeft = 'left-3';
+  if (hasFeatured && hasPopular) {
+    statusLeft = 'left-[188px]';
+  } else if (hasFeatured || hasPopular) {
+    statusLeft = 'left-[98px]';
+  }
 
   return (
     <article
@@ -74,15 +92,22 @@ const PropertyCard = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-transparent to-transparent" />
 
+        {/* Featured Badge */}
+        {hasFeatured && (
+          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider bg-gradient-to-r from-amber-500 to-yellow-500 shadow-md shadow-amber-500/20 z-10 animate-pulse">
+            ⭐ Featured
+          </span>
+        )}
+
         {/* Most Viewed Badge */}
-        {Number(property.views_count) > 10 && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider bg-orange-500 shadow-md shadow-orange-500/20 z-10">
+        {hasPopular && (
+          <span className={`absolute top-3 ${popularLeft} px-2.5 py-1 rounded-lg text-[10px] font-bold text-white uppercase tracking-wider bg-orange-500 shadow-md shadow-orange-500/20 z-10`}>
             🔥 Popular
           </span>
         )}
 
         {/* Status badge */}
-        <span className={`absolute top-3 ${Number(property.views_count) > 10 ? 'left-24' : 'left-3'} inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide ${STATUS_COLORS[statusKey]}`}>
+        <span className={`absolute top-3 ${statusLeft} inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide ${STATUS_COLORS[statusKey]}`}>
           {STATUS_LABELS[statusKey]}
         </span>
 
@@ -202,6 +227,26 @@ const PropertyCard = ({
               <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.inquiries_count || 0}</span>
             </div>
           </div>
+        )}
+
+        {canDelete && !property.is_featured && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFeature?.(property.id);
+            }}
+            disabled={isFeatureLoading === property.id}
+            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {isFeatureLoading === property.id ? (
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span className="font-extrabold tracking-wider bg-white text-emerald-600 px-1.5 py-0.5 rounded text-[9px] uppercase">eSewa</span>
+                <span>Feature Listing (₨ 500)</span>
+              </>
+            )}
+          </button>
         )}
       </div>
     </article>

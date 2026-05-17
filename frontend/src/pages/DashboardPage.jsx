@@ -63,6 +63,7 @@ const DashboardPage = () => {
   const [editForm, setEditForm] = useState({ ...EMPTY_FORM });
   const [editImageFiles, setEditImageFiles] = useState([]);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isFeatureLoading, setIsFeatureLoading] = useState(null);
 
   // Sync filters to URL
   useEffect(() => {
@@ -213,6 +214,42 @@ const DashboardPage = () => {
     finally { setEditing(false); }
   };
 
+  const handleFeatureListing = async (propertyId) => {
+    setIsFeatureLoading(propertyId);
+    const tid = toast.loading('Initiating eSewa payment...');
+    try {
+      const { data } = await axiosClient.post('/payments/initiate-esewa', { propertyId });
+      
+      if (data.success && data.params) {
+        toast.loading('Redirecting to eSewa...', { id: tid });
+        
+        // Dynamically create a form and submit it to eSewa sandbox/UAT
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = data.params.esewa_url;
+        
+        Object.entries(data.params).forEach(([key, val]) => {
+          if (key !== 'esewa_url') {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = val;
+            form.appendChild(input);
+          }
+        });
+        
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        toast.error('Could not initiate payment', { id: tid });
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Payment initiation failed', { id: tid });
+    } finally {
+      setIsFeatureLoading(null);
+    }
+  };
+
   // Skeleton loader
   const SkeletonCard = () => (
     <div className="bg-white dark:bg-[#151515] rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-pulse">
@@ -346,7 +383,8 @@ const DashboardPage = () => {
                 {displayed.map(property => (
                   <PropertyCard key={property.id} property={property} onOpen={openPropertyDetails} onToggleFavourite={handleToggleFavourite} loading={toggleLoading}
                     canDelete={Number(property.uploaded_by) === Number(user?.id)} canEdit={Number(property.uploaded_by) === Number(user?.id)}
-                    onEdit={handleOpenEdit} onDelete={handleRequestDelete} deleting={deleteLoading} />
+                    onEdit={handleOpenEdit} onDelete={handleRequestDelete} deleting={deleteLoading}
+                    onFeature={handleFeatureListing} isFeatureLoading={isFeatureLoading} />
                 ))}
               </div>
             )}

@@ -23,6 +23,7 @@ Buyer Portal is a comprehensive platform designed for property buyers, sellers, 
 - **Database:** PostgreSQL (Hosted on Supabase)
 - **Authentication:** JWT (JSON Web Tokens) with role-based access control
 - **Email Service:** Resend (Password recovery & Inquiries)
+- **Payment Gateways:** eSewa ePay Staging (HMAC-SHA256 v2 API)
 
 ### Media & Infrastructure
 - **Image Storage:** Cloudinary (Dynamic transforms & auto-optimization)
