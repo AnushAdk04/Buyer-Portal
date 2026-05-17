@@ -44,6 +44,13 @@ For a complete and detailed breakdown of all implemented features, please refer 
 - Cloudinary Account
 - Resend API Key (optional, for emails)
 
+## 💳 Staging eSewa Credentials
+
+To test the property promotion / featuring capability in the sandbox environment, utilize these official eSewa test credentials during checkout:
+*   **eSewa ID (Test Wallet):** `9806800001` (or ending in `2` / `3` / `4` / `5`)
+*   **Password:** `Nepal@123`
+*   **OTP Token:** `123456`
+
 ## 🌐 Live Demo
 
 - **Frontend:** [https://buyer-portal-alpha.vercel.app](https://buyer-portal-alpha.vercel.app)
