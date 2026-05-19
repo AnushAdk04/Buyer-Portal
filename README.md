@@ -44,12 +44,19 @@ For a complete and detailed breakdown of all implemented features, please refer 
 - Cloudinary Account
 - Resend API Key (optional, for emails)
 
-## 💳 Staging eSewa Credentials
+## 💳 Sandbox Test Credentials
 
-To test the property promotion / featuring capability in the sandbox environment, utilize these official eSewa test credentials during checkout:
+To test the property promotion / featuring capability in the sandbox environment, utilize these official staging credentials during checkout:
+
+### 1. eSewa Sandbox Details
 *   **eSewa ID (Test Wallet):** `9806800001` (or ending in `2` / `3` / `4` / `5`)
 *   **Password:** `Nepal@123`
 *   **OTP Token:** `123456`
+
+### 2. Khalti Sandbox Details
+*   **Test Wallet ID:** `9800000000` (or ending in `1` / `2` / `3` / `4` / `5`)
+*   **MPIN:** `1111`
+*   **OTP Token:** `987654`
 
 ## 🌐 Live Demo
 

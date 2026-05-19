@@ -236,14 +236,13 @@ const PropertyCard = ({
               onFeature?.(property.id);
             }}
             disabled={isFeatureLoading === property.id}
-            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
+            className="w-full mt-3 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-500/10 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none"
           >
             {isFeatureLoading === property.id ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <span className="font-extrabold tracking-wider bg-white text-emerald-600 px-1.5 py-0.5 rounded text-[9px] uppercase">eSewa</span>
-                <span>Feature Listing (₨ 500)</span>
+                <span>⭐ Promote / Feature (₨ 500)</span>
               </>
             )}
           </button>

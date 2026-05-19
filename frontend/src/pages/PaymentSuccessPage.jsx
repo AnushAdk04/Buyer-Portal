@@ -17,19 +17,37 @@ const PaymentSuccessPage = () => {
   useEffect(() => {
     const verifyPayment = async () => {
       const dataParam = searchParams.get('data');
-      if (!dataParam) {
-        setError('Missing transaction payload from eSewa.');
+      const pidxParam = searchParams.get('pidx');
+
+      if (!dataParam && !pidxParam) {
+        setError('Missing transaction payload from eSewa or Khalti.');
         setLoading(false);
         return;
       }
 
       try {
-        const { data } = await axiosClient.post('/payments/verify-esewa', { data: dataParam });
-        if (data.success) {
-          setTxDetails(data);
-          toast.success('Listing featured successfully!');
-        } else {
-          setError(data.message || 'Payment verification failed.');
+        if (dataParam) {
+          // eSewa verification
+          const { data } = await axiosClient.post('/payments/verify-esewa', { data: dataParam });
+          if (data.success) {
+            setTxDetails({ ...data, gateway: 'eSewa' });
+            toast.success('Listing featured successfully!');
+          } else {
+            setError(data.message || 'Payment verification failed.');
+          }
+        } else if (pidxParam) {
+          // Khalti verification
+          const purchaseOrderId = searchParams.get('purchase_order_id');
+          const { data } = await axiosClient.post('/payments/verify-khalti', { 
+            pidx: pidxParam,
+            purchase_order_id: purchaseOrderId
+          });
+          if (data.success) {
+            setTxDetails({ ...data, gateway: 'Khalti' });
+            toast.success('Listing featured successfully!');
+          } else {
+            setError(data.message || 'Khalti payment verification failed.');
+          }
         }
       } catch (err) {
         console.error('Verification error:', err);
@@ -98,7 +116,7 @@ const PaymentSuccessPage = () => {
               <div className="w-full bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 my-2 text-left space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">Gateway:</span>
-                  <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">eSewa epay</span>
+                  <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{txDetails?.gateway || 'eSewa'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">Amount Paid:</span>
@@ -110,7 +128,9 @@ const PaymentSuccessPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 dark:text-slate-400 font-medium">Verification Method:</span>
-                  <span className="text-blue-500 dark:text-blue-400 font-semibold">HMAC-SHA256</span>
+                  <span className="text-blue-500 dark:text-blue-400 font-semibold">
+                    {txDetails?.gateway === 'Khalti' ? 'Secure API Lookup' : 'HMAC-SHA256'}
+                  </span>
                 </div>
               </div>
 

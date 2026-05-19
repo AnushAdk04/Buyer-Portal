@@ -13,6 +13,7 @@ import EditPropertyModal from '../components/EditPropertyModal';
 import AnalyticsModal from '../components/AnalyticsModal';
 import CompareBar from '../components/CompareBar';
 import RecentlyViewed from '../components/RecentlyViewed';
+import FeatureListingModal from '../components/FeatureListingModal';
 import SEO from '../components/SEO';
 import toast from 'react-hot-toast';
 import { FiUploadCloud, FiSearch, FiFilter, FiGrid, FiList, FiX, FiMap, FiTrendingUp } from 'react-icons/fi';
@@ -64,6 +65,7 @@ const DashboardPage = () => {
   const [editImageFiles, setEditImageFiles] = useState([]);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isFeatureLoading, setIsFeatureLoading] = useState(null);
+  const [promotingPropertyId, setPromotingPropertyId] = useState(null);
 
   // Sync filters to URL
   useEffect(() => {
@@ -214,39 +216,63 @@ const DashboardPage = () => {
     finally { setEditing(false); }
   };
 
-  const handleFeatureListing = async (propertyId) => {
+  const handleFeatureListing = (propertyId) => {
+    setPromotingPropertyId(propertyId);
+  };
+
+  const handleChooseGateway = async (propertyId, gateway) => {
     setIsFeatureLoading(propertyId);
-    const tid = toast.loading('Initiating eSewa payment...');
-    try {
-      const { data } = await axiosClient.post('/payments/initiate-esewa', { propertyId });
-      
-      if (data.success && data.params) {
-        toast.loading('Redirecting to eSewa...', { id: tid });
+    setPromotingPropertyId(null);
+    
+    if (gateway === 'esewa') {
+      const tid = toast.loading('Initiating eSewa payment...');
+      try {
+        const { data } = await axiosClient.post('/payments/initiate-esewa', { propertyId });
         
-        // Dynamically create a form and submit it to eSewa sandbox/UAT
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = data.params.esewa_url;
-        
-        Object.entries(data.params).forEach(([key, val]) => {
-          if (key !== 'esewa_url') {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = val;
-            form.appendChild(input);
-          }
-        });
-        
-        document.body.appendChild(form);
-        form.submit();
-      } else {
-        toast.error('Could not initiate payment', { id: tid });
+        if (data.success && data.params) {
+          toast.loading('Redirecting to eSewa...', { id: tid });
+          
+          // Dynamically create a form and submit it to eSewa sandbox/UAT
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = data.params.esewa_url;
+          
+          Object.entries(data.params).forEach(([key, val]) => {
+            if (key !== 'esewa_url') {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = key;
+              input.value = val;
+              form.appendChild(input);
+            }
+          });
+          
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          toast.error('Could not initiate payment', { id: tid });
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Payment initiation failed', { id: tid });
+      } finally {
+        setIsFeatureLoading(null);
       }
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Payment initiation failed', { id: tid });
-    } finally {
-      setIsFeatureLoading(null);
+    } else if (gateway === 'khalti') {
+      const tid = toast.loading('Initiating Khalti payment...');
+      try {
+        const { data } = await axiosClient.post('/payments/initiate-khalti', { propertyId });
+        
+        if (data.success && data.payment_url) {
+          toast.loading('Redirecting to Khalti...', { id: tid });
+          window.location.href = data.payment_url;
+        } else {
+          toast.error('Could not initiate Khalti payment', { id: tid });
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || 'Payment initiation failed', { id: tid });
+      } finally {
+        setIsFeatureLoading(null);
+      }
     }
   };
 
@@ -397,6 +423,12 @@ const DashboardPage = () => {
         <EditPropertyModal isOpen={isEditOpen} onClose={() => { if (!editing) { setIsEditOpen(false); setEditingPropertyId(null); setEditImageFiles([]); } }} form={editForm} onFormChange={handleEditFormChange} onImageChange={setEditImageFiles} onSubmit={handleSaveEdit} saving={editing} imageFiles={editImageFiles} />
         <AnalyticsModal isOpen={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
         <CompareBar />
+        <FeatureListingModal 
+          isOpen={Boolean(promotingPropertyId)} 
+          onClose={() => setPromotingPropertyId(null)} 
+          onChooseGateway={(gateway) => handleChooseGateway(promotingPropertyId, gateway)} 
+          loading={isFeatureLoading === promotingPropertyId} 
+        />
       </main>
     </div>
   );

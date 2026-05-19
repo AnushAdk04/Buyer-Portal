@@ -202,7 +202,209 @@ const verifyEsewaPayment = async (req, res) => {
   }
 };
 
+const KHALTI_SECRET_KEY = process.env.KHALTI_SECRET_KEY;
+
+/**
+ * @desc    Initiate Khalti payment for featuring property
+ * @route   POST /api/payments/initiate-khalti
+ * @access  Private
+ */
+const initiateKhaltiPayment = async (req, res) => {
+  try {
+    const { propertyId } = req.body;
+
+    if (!propertyId) {
+      return res.status(400).json({ message: 'Property ID is required' });
+    }
+
+    if (!KHALTI_SECRET_KEY) {
+      return res.status(400).json({ 
+        message: 'Khalti secret key is not configured. Please add KHALTI_SECRET_KEY to your backend/.env file.' 
+      });
+    }
+
+    // Verify property exists and is owned by the user
+    const { rows: propertyRows } = await db.query(
+      'SELECT * FROM properties WHERE id = $1 AND uploaded_by = $2',
+      [propertyId, req.user.id]
+    );
+
+    if (propertyRows.length === 0) {
+      return res.status(404).json({ message: 'Property not found or you are not authorized' });
+    }
+
+    const property = propertyRows[0];
+
+    if (property.is_featured) {
+      return res.status(400).json({ message: 'Property is already featured' });
+    }
+
+    // Generate transaction UUID
+    const transactionUuid = `khalti-txn-${propertyId}-${Date.now()}`;
+
+    // Create payment entry in database
+    await db.query(
+      `INSERT INTO payments (user_id, property_id, amount, transaction_uuid, gateway, status) 
+       VALUES ($1, $2, $3, $4, 'khalti', 'PENDING')`,
+      [req.user.id, propertyId, FEATURE_AMOUNT, transactionUuid]
+    );
+
+    // Call Khalti initiate API using global fetch
+    const khaltiUrl = process.env.NODE_ENV === 'production'
+      ? 'https://khalti.com/api/v2/epayment/initiate/'
+      : 'https://a.khalti.com/api/v2/epayment/initiate/';
+
+    const response = await fetch(khaltiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${KHALTI_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        return_url: `${FRONTEND_URL}/payment/success`,
+        website_url: FRONTEND_URL,
+        amount: Math.round(FEATURE_AMOUNT * 100), // Rs to Paisa (50000 paisa)
+        purchase_order_id: transactionUuid,
+        purchase_order_name: `Feature Listing - #${property.title.substring(0, 30)}`
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.pidx) {
+      console.error('Khalti initiate error:', data);
+      return res.status(400).json({ 
+        message: 'Could not initiate Khalti payment. Please check your KHALTI_SECRET_KEY configuration.', 
+        error: data 
+      });
+    }
+
+    // Update the payment record with the real pidx
+    await db.query(
+      `UPDATE payments SET transaction_code = $1 WHERE transaction_uuid = $2`,
+      [data.pidx, transactionUuid]
+    );
+
+    res.status(200).json({
+      success: true,
+      payment_url: data.payment_url,
+      pidx: data.pidx
+    });
+  } catch (error) {
+    console.error('Initiate Khalti payment error:', error);
+    res.status(500).json({ message: 'Could not initiate Khalti payment' });
+  }
+};
+
+/**
+ * @desc    Verify Khalti payment from callback
+ * @route   POST /api/payments/verify-khalti
+ * @access  Private
+ */
+const verifyKhaltiPayment = async (req, res) => {
+  try {
+    const { pidx, purchase_order_id } = req.body;
+
+    if (!pidx) {
+      return res.status(400).json({ message: 'pidx is required for verification' });
+    }
+
+    if (!KHALTI_SECRET_KEY) {
+      return res.status(400).json({ 
+        message: 'Khalti secret key is not configured. Please add KHALTI_SECRET_KEY to your backend/.env file.' 
+      });
+    }
+
+    // Call Khalti lookup API using global fetch
+    const lookupUrl = process.env.NODE_ENV === 'production'
+      ? 'https://khalti.com/api/v2/epayment/lookup/'
+      : 'https://a.khalti.com/api/v2/epayment/lookup/';
+
+    const response = await fetch(lookupUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${KHALTI_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ pidx })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.status !== 'Completed') {
+      console.error('Khalti lookup error:', data);
+      return res.status(400).json({ 
+        message: 'Khalti payment verification failed. Payment status is not completed.', 
+        error: data 
+      });
+    }
+
+    // Start transaction to update payment and property featured status
+    const client = await db.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Fetch payment record matching pidx or transaction_uuid (purchase_order_id)
+      const { rows: paymentRows } = await client.query(
+        'SELECT * FROM payments WHERE transaction_code = $1 OR transaction_uuid = $2 FOR UPDATE',
+        [pidx, purchase_order_id || '']
+      );
+
+      if (paymentRows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ message: 'Payment record not found' });
+      }
+
+      const payment = paymentRows[0];
+
+      if (payment.status === 'COMPLETE') {
+        await client.query('ROLLBACK');
+        return res.status(200).json({ success: true, message: 'Payment already processed' });
+      }
+
+      // Update payment record
+      await client.query(
+        `UPDATE payments 
+         SET status = 'COMPLETE', transaction_code = $1, updated_at = NOW() 
+         WHERE id = $2`,
+        [data.transaction_id || pidx, payment.id]
+      );
+
+      // Update property featured status
+      await client.query(
+        'UPDATE properties SET is_featured = true WHERE id = $1',
+        [payment.property_id]
+      );
+
+      // Create a notification
+      await client.query(
+        `INSERT INTO notifications (user_id, type, title, message, link)
+         VALUES ($1, 'payment', 'Listing Featured ⭐', 'Your property listing has been featured successfully via Khalti!', $2)`,
+        [payment.user_id, `/dashboard/properties/${payment.property_id}`]
+      );
+
+      await client.query('COMMIT');
+
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified and property featured successfully!',
+        propertyId: payment.property_id
+      });
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Verify Khalti payment error:', error);
+    res.status(500).json({ message: 'Could not verify Khalti payment' });
+  }
+};
+
 module.exports = {
   initiateEsewaPayment,
-  verifyEsewaPayment
+  verifyEsewaPayment,
+  initiateKhaltiPayment,
+  verifyKhaltiPayment
 };

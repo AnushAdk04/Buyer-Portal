@@ -57,13 +57,15 @@ Base URL: `http://localhost:5000/api`
  | :--- | :--- | :--- |
  | `/ai/chat` | `POST` | Chat with Gemini AI (Real Estate Assistant) |
  
- ## Payments & Promoted Listings (eSewa)
+ ## Payments & Promoted Listings (eSewa & Khalti)
  
  | Endpoint | Method | Description |
  | :--- | :--- | :--- |
- | `/payments/initiate-esewa` | `POST` | Request staging promotion parameter block and HMAC-SHA256 signature |
- | `/payments/verify-esewa` | `POST` | Decodes Base64 redirect payloads and verifies cryptographic signatures |
+ | `/payments/initiate-esewa` | `POST` | Request staging promotion parameter block and HMAC-SHA256 signature for eSewa |
+ | `/payments/verify-esewa` | `POST` | Decodes Base64 redirect payloads and verifies cryptographic signatures for eSewa |
+ | `/payments/initiate-khalti` | `POST` | Request staging payment_url and transaction pidx token for Khalti checkout |
+ | `/payments/verify-khalti` | `POST` | Performs a server-to-server payment lookup with Khalti to verify transaction state |
  
  ---
- *Last Updated: May 17, 2026*
+ *Last Updated: May 19, 2026*
 
