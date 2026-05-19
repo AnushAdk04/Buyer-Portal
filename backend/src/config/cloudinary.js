@@ -30,14 +30,23 @@ const avatarStorage = new CloudinaryStorage({
   },
 });
 
+const imageFilter = (req, file, cb) => {
+  if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
+    return cb(new Error('Only JPG, JPEG, PNG, and WEBP image files are allowed!'), false);
+  }
+  cb(null, true);
+};
+
 const uploadProperty = multer({
   storage: propertyStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: imageFilter,
 });
 
 const uploadAvatar = multer({
   storage: avatarStorage,
   limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: imageFilter,
 });
 
 module.exports = { cloudinary, uploadProperty, uploadAvatar };

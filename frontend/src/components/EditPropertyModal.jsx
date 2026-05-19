@@ -15,7 +15,7 @@ const EditPropertyModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[80] bg-black/65 flex items-center justify-center px-4 overflow-y-auto py-10"
+      className="fixed inset-0 z-[80] bg-black/65 flex items-start justify-center px-4 overflow-y-auto py-10"
       onClick={onClose}
     >
       <div

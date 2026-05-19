@@ -59,7 +59,7 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: err.message || 'Upload failed due to invalid file.' });
   }
 
-  if (err && err.message === 'Only image files are allowed') {
+  if (err && err.message && (err.message.includes('allowed') || err.message.includes('Only'))) {
     return res.status(400).json({ message: err.message });
   }
 
